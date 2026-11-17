@@ -18,12 +18,18 @@
 :root[data-theme="dark"]{--bg:#1c0a10;--ink:#f6ecd6;--card:#2d1119;--acc:#c9a24b;--accink:#1c0a10}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.8 "Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;min-height:100vh}
-header{position:relative;z-index:30;display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line)}
+header{min-height:53px;position:relative;z-index:30;display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line)}
 header b{font-size:15px;letter-spacing:.08em}
 #menu{position:absolute;right:10px;top:100%;z-index:40;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:6px;display:flex;flex-direction:column;gap:6px;min-width:190px;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 #menu[hidden],#menu button[hidden]{display:none}
 #menu button{background:transparent;color:var(--ink);text-align:left}
 #tm{font-variant-numeric:tabular-nums;letter-spacing:.05em}
+#bMenu[hidden]{display:none}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+#mdlg{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+#mdlg[hidden]{display:none}
+#mdlg .box{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:16px;width:min(320px,88vw)}
 #kwbar{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);font-size:14px}
 #kwbar[hidden]{display:none}
 .chip{display:inline-block;border:1px solid var(--line);border-radius:12px;padding:1px 10px;margin:2px 4px 2px 0;background:var(--bg)}
@@ -70,16 +76,17 @@ try{document.getElementById("ct").textContent=JSON.parse(localStorage.getItem("s
 document.getElementById("cb").onclick=function(){if(window.CLOSING)return;window.CG=true;try{window.onCG&&window.onCG()}catch(e){showErr(e.message)}cur.classList.add("o");setTimeout(function(){cur.classList.add("f")},2300);setTimeout(function(){cur.classList.add("d")},2800)};
 })();
 </script>
-<header><b>🎻 バースデー</b><button class="s" id="bMenu" aria-label="メニュー" aria-expanded="false">☰</button><div id="menu" hidden><button data-m="edit">シナリオの編集</button><button data-m="sound">サウンド</button><button data-m="play" id="mPlay" hidden>とじる</button></div></header>
+<header><b>🎹 バースデー</b><button class="s" id="bMenu" aria-label="メニュー" aria-expanded="false" hidden>☰</button><div id="menu" hidden><button data-m="edit">シナリオの編集</button><button data-m="sound">サウンド</button><button data-m="play" id="mPlay" hidden>とじる</button></div></header>
 <div id="stage"></div>
 <main id="app"></main>
 <div id="kwbar" hidden></div>
+<div id="mdlg" hidden><div class="box"><b>メニューを表示</b><p style="margin:6px 0 10px;font-size:14px">キーワードを入力してください。</p><input id="mk" inputmode="numeric" autocomplete="off"><div class="msg" id="mm"></div><div class="row"><button id="mok">OK</button><button class="s" id="mcancel">キャンセル</button></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const DEF={v2:1,lk:"AAA",title:"〇〇さんのバースデー・コンサート",name:"〇〇",tries:3,spots:[
-{n:"ホワイエ",l:"ようこそ、開演前のホワイエへ。\n本日の主役は、あなたです。",q:"入口近くの案内板に書かれた、いちばん大きな文字は？",a:"ようこそ",k:"1111",x:"次の行き先は「中庭のベンチ」です。"},
-{n:"中庭",l:"素敵な音色が聞こえますね。\n少し休憩しましょう。",q:"ベンチの近くに咲いている花の色は？",a:"あか",k:"1111",x:"最後の行き先は「展望テラス」です。"},
-{n:"展望テラス",l:"夜景がきれいですね。\nあとひと息です。",q:"テラスの手すりに結ばれていたリボンの色は？",a:"あお",k:"1111",x:""}]};
+{n:"ホワイエ",l:"ようこそ、開演前のホワイエへ。\n本日の主役は、あなたです。",q:"入口近くの案内板に書かれた、いちばん大きな文字は？",a:"ようこそ",k:"1111",x:"次の行き先は「カウンターバー」です。"},
+{n:"カウンターバー",l:"明るいカウンターバーへようこそ。\nどうぞ、おくつろぎください。",q:"カウンターの奥に立っている女性は、何人ですか？（数字で）",a:"4",k:"1111",x:"最後の行き先は「フレンチレストラン」です。"},
+{n:"フレンチレストラン",l:"ごゆっくり、お食事をお楽しみください。",q:"円卓を囲んで座っている貴族は、何人ですか？（数字で）",a:"6",k:"1111",x:""}]};
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const norm=s=>String(s).normalize("NFKC").trim().toLowerCase();
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
@@ -87,7 +94,7 @@ const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let S=ld("scn",DEF),P=ld("prog",{i:0,ph:"start",li:0,t:0}),mode="play",resume=P.ph!=="start",msg="",talk=false;
 const app=document.getElementById("app");
 const uid=()=>Math.random().toString(36).slice(2,9);
-const fix=()=>{let c=0;S.spots.forEach(s=>{if(!s.id){s.id=uid();c=1}});const s0=S.spots[0];if(s0&&s0.n==="ホワイエ"&&(s0.l||"").indexOf("ようこそ、開演前のホワイエ")===0){s0.n="お寿司屋さん";s0.l="カウンターへお座りください。\nしばし、お楽しみくださいませ。";c=1}const s1=S.spots[1];if(s1&&s1.n==="中庭"&&(s1.l||"").indexOf("素敵な音色")===0){s1.n="フレンチレストラン";s1.l="ごゆっくり、お食事をお楽しみください。";c=1}if(S.spots.length===2&&S.spots[0].n==="お寿司屋さん"&&S.spots[1].n==="フレンチレストラン"){S.spots.push(Object.assign({id:uid()},{n:"展望テラス",l:"夜景がきれいですね。\nあとひと息です。",q:"テラスの手すりに結ばれていたリボンの色は？",k:"あお",x:""}));c=1}if(!S.v2){S.spots.forEach(s=>{if(s.a===undefined||s.a===""){if(s.k&&s.k!=="1111"){s.a=s.k;s.k="1111"}else if(!s.k)s.k="1111"}});S.v2=1;c=1}if(S.lk===undefined){S.lk="AAA";c=1}if(c)sv("scn",S)};fix();
+const fix=()=>{let c=0;S.spots.forEach(s=>{if(!s.id){s.id=uid();c=1}});const s0=S.spots[0];if(s0&&s0.n==="ホワイエ"&&(s0.l||"").indexOf("ようこそ、開演前のホワイエ")===0){s0.n="お寿司屋さん";s0.l="カウンターへお座りください。\nしばし、お楽しみくださいませ。";c=1}const s1=S.spots[1];if(s1&&s1.n==="中庭"&&(s1.l||"").indexOf("素敵な音色")===0){s1.n="フレンチレストラン";s1.l="ごゆっくり、お食事をお楽しみください。";c=1}if(S.spots.length===2&&S.spots[0].n==="お寿司屋さん"&&S.spots[1].n==="フレンチレストラン"){S.spots.push(Object.assign({id:uid()},{n:"展望テラス",l:"夜景がきれいですね。\nあとひと息です。",q:"テラスの手すりに結ばれていたリボンの色は？",k:"あお",x:""}));c=1}if(S.spots.length>=3&&S.spots[1].n==="フレンチレストラン"&&S.spots[2].n==="展望テラス"){const a1=S.spots[1],a2=S.spots[2];Object.assign(a1,{n:"カウンターバー",l:"明るいカウンターバーへようこそ。\nどうぞ、おくつろぎください。",q:"カウンターの奥に立っている女性は、何人ですか？（数字で）",a:"4",x:"最後の行き先は「フレンチレストラン」です。"});Object.assign(a2,{n:"フレンチレストラン",l:"ごゆっくり、お食事をお楽しみください。",q:"円卓を囲んで座っている貴族は、何人ですか？（数字で）",a:"6",x:""});if(!S.v2){a1.k="1111";a2.k="1111"}c=1}if(!S.v2){S.spots.forEach(s=>{if(s.a===undefined||s.a===""){if(s.k&&s.k!=="1111"){s.a=s.k;s.k="1111"}else if(!s.k)s.k="1111"}});S.v2=1;c=1}if(S.lk===undefined){S.lk="AAA";c=1}if(c)sv("scn",S)};fix();
 const IOS=/iP(hone|od|ad)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 const mimeOf=f=>{const n=(f.name||"").toLowerCase();return/\.(m4a|mp4)$/.test(n)?"audio/mp4":/\.mp3$/.test(n)?"audio/mpeg":/\.wav$/.test(n)?"audio/wav":/\.aac$/.test(n)?"audio/aac":f.type||"audio/mpeg"};
 const readBuf=f=>f.arrayBuffer?f.arrayBuffer():new Promise((r,j)=>{const x=new FileReader();x.onload=()=>r(x.result);x.onerror=()=>j(x.error);x.readAsArrayBuffer(f)});
@@ -117,17 +124,18 @@ function render(){
   if(!S.spots[P.i])P={i:0,ph:"start",li:0,t:0};const sp=S.spots[P.i];talk=false;let h="";
   if(resume){h=`<div class="bub"><b>${esc(S.title)}</b>\n前回の続きがあります。</div><div class="row"><button data-a="cont">続きから</button><button class="s" data-a="restart">最初から</button></div>`}
   else if(P.ph==="start"){h=`<h1>${esc(S.title)}</h1><div class="bub">今日の主役は、あなたです。\n${esc(S.name)}さんのために、開演です。</div><button data-a="begin">はじめる</button>${S.bgm?` <button class="s" data-a="mus">♪ 曲を流す</button>`:""}`}
-  else if(P.ph==="door"){talk=true;const nm=esc(sp.n);h=`<div class="bub"><small>行き先のご案内</small>${P.u?"鍵が開きました！\n次の行き先は「"+nm+"」です。":"最初の行き先は「"+nm+"」です。\nもう鍵は開いています。"}\nドアをちょんとタップすると、扉が開いて、中へ入れますよ。</div>${Z?"":'<button data-a="tapd">ドアを開ける</button>'}`}
+  else if(P.ph==="door"){talk=true;const nm=esc(sp.n);h=`<div class="bub"><small>行き先のご案内</small>${P.u?"鍵が開きました！\n次の行き先は「"+nm+"」です。":"最初の行き先は「"+nm+"」です。\nもう鍵は開いています。"}${roomOk(P.i)?"\nドアをちょんとタップすると、扉が開いて、中へ入れますよ。":"\nただし、この部屋はキーワードが設定されていないため、入れません。"}</div>${Z?"":'<button data-a="tapd">ドアを開ける</button>'}`}
   else if(P.ph==="enter"){talk=true;h=`<div class="bub">それでは、ご案内します。\nついてきてください。</div>`}
   else if(P.ph==="wait"){talk=true;h=`<div class="bub"><small>${esc(sp.n)}</small>しばし、お楽しみください。\nのこり <b id="tm"></b></div><button class="s" data-a="skip">スキップ</button>`;setTimeout(tk,0)}
   else if(P.ph==="chest"){talk=true;h=`<div class="bub">お見事です！\n宝箱が現れました。タップして、開けてみましょう。</div>${Z?"":'<button data-a="tapc">宝箱を開ける</button>'}`}
   else if(P.ph==="got"){talk=true;P.kw=P.kw||{};if(P.kw[sp.id]===undefined){P.kw[sp.id]=sp.k||"1111";sv("prog",P)}const nx=P.i+1<S.spots.length;h=`<div class="bub"><small>${esc(sp.n)}</small>宝箱が開きました！\nキーワード「${esc(P.kw[sp.id])}」を手に入れました。${nx&&P.i<2?"\n次の扉の鍵が開きます。":""}</div><button data-a="after">${nx?(P.i<2?"扉へ戻る":"次へ"):"フィナーレへ"}</button>`}
+  else if(P.ph==="fail"){talk=true;h=`<div class="bub"><small>残念…</small>${S.tries}回、間違えてしまいました。\nもう一度、最初からやり直しましょう。</div>`}
   else if(P.ph==="say"){talk=true;const L=lines();h=`<div class="bub"><small>${esc(sp.n)}</small>${esc(L[P.li]||"")}</div><button data-a="next">次へ</button>`}
   else if(P.ph==="quiz"){talk=true;h=`<div class="bub"><small>${esc(sp.n)}</small>${esc(sp.q)}</div><label for="kw">答えを入力</label><div class="row"><input id="kw" autocomplete="off" style="flex:1"><button data-a="ans">答える</button></div><div class="msg" id="m">${esc(msg)}</div>`}
   else if(P.ph==="reveal"){talk=true;h=`<div class="bub">答えは「${esc(sp.a||sp.k)}」でした。\n気を取り直して、先へ進みましょう。</div><button data-a="toGo">進む</button>`}
   else if(P.ph==="go"){const last=P.i>=S.spots.length-1;h=`<div class="bub"><small>行き先のご案内</small>${esc(sp.x||"")}</div><button data-a="${last?"fin":"nextSpot"}">${last?"フィナーレへ":"次のスポットへ"}</button>`}
   else if(P.ph==="end"){h=P.fo?`<div class="bub fin"><h1>Happy Birthday, ${esc(S.name)}!</h1>豪華な宝箱が開きました！\nラストキーワード「${esc(S.lk||"AAA")}」を手に入れました。</div><button data-a="restart">最初に戻る</button>`:`<div class="bub"><small>最後の宝箱</small>おめでとうございます！\nここまでに手に入れたキーワードを、順番に入力してください。\n集めたキーワードは、画面の下に出ています。</div><label for="fk">キーワード</label><div class="row"><input id="fk" autocomplete="off" style="flex:1"><button data-a="fok">OK</button></div><div class="msg" id="m"></div><button class="s" data-a="restart">最初に戻る</button>`}
-  app.innerHTML=h;const k=document.getElementById("kw");if(k)k.focus();bgm(curKey());renderKw();if(Z){const sc=resume||mode!=="play"?"hall":(P.ph==="door"||P.ph==="enter")?"void":["say","wait","chest","quiz","reveal","got"].includes(P.ph)?(P.i===0?"sushi":P.i===1?"french":"hall"):"hall";Z.sync(sc,Math.min(P.i,2),[0,1,2].map(k=>(S.spots[k]||{}).n||""),sc==="void"&&P.ph==="door"&&P.u?1:0,P.ph==="chest"?1:P.ph==="got"?2:0,P.ph==="say"?(P.i===0?"いらっしゃいませ":P.i===1?"お待ちしておりました。":""):"",mode==="play"&&!resume&&P.ph==="end",mode==="play"&&!resume&&P.ph==="end"&&P.fo?1:0);if(P.u){P.u=0;sv("prog",P)}}
+  app.innerHTML=h;const k=document.getElementById("kw");if(k)k.focus();bgm(curKey());renderKw();if(Z){const sc=resume||mode!=="play"?"hall":(P.ph==="door"||P.ph==="enter")?"void":["say","wait","chest","quiz","reveal","got","fail"].includes(P.ph)?(P.i===0?"sushi":P.i===1?"bar":P.i===2?"french":"hall"):"hall";Z.sync(sc,Math.min(P.i,2),[0,1,2].map(k=>(S.spots[k]||{}).n||""),sc==="void"&&P.ph==="door"&&P.u?1:0,P.ph==="chest"?1:P.ph==="got"?2:0,P.ph==="say"?(P.i===0?"いらっしゃいませ":P.i===1?"いらっしゃいませ♪":P.i===2?"お待ちしておりました。":""):"",mode==="play"&&!resume&&P.ph==="end",mode==="play"&&!resume&&P.ph==="end"&&P.fo?1:0);if(P.u){P.u=0;sv("prog",P)}}
 }
 app.addEventListener("click",e=>{const a=e.target.dataset.a;if(!a)return;unlock();
   if(mode!=="play")return editAct(e.target,a);
@@ -139,11 +147,11 @@ app.addEventListener("click",e=>{const a=e.target.dataset.a;if(!a)return;unlock(
   else if(a==="tapd")tapDoor();
   else if(a==="tapc")go("got");
   else if(a==="fok"){const v=nk(document.getElementById("fk").value);if(v!==""&&v===wantKw())go("end",{fo:1});else document.getElementById("m").textContent="キーワードが違います。画面の下に出ているキーワードを、順番に入力してください。"}
-  else if(a==="after"){const i=P.i;if(i+1>=S.spots.length)go("end");else if(i<2)go("door",{i:i+1,u:1,li:0,t:0});else go("say",{i:i+1,li:0,t:0})}
+  else if(a==="after"){const i=P.i;if(i+1>=S.spots.length)go("end");else if(i<2)go("door",{i:i+1,u:1,li:0,t:0});else if(!roomOk(i+1))toast("次の部屋は、キーワードが設定されていないため入れません。編集画面で設定してください。");else go("say",{i:i+1,li:0,t:0})}
   else if(a==="next"){P.li+1<lines().length?go("say",{li:P.li+1}):go(TT()>0?"wait":"quiz",{t:0,w:Date.now()})}
   else if(a==="ans"){const v=document.getElementById("kw").value,sp=S.spots[P.i];
     if(norm(v)===norm(sp.a||sp.k))go("chest");
-    else{P.t++;sv("prog",P);const r=S.tries-P.t;if(r<=0)go("reveal");else{msg=`違うようです。残り${r}回。`;document.getElementById("m").textContent=msg}}}
+    else{P.t++;sv("prog",P);const r=S.tries-P.t;if(r<=0)failRestart();else{msg=`違うようです。残り${r}回。`;document.getElementById("m").textContent=msg}}}
   else if(a==="toGo")go("chest");
   else if(a==="nextSpot")go("say",{i:P.i+1,li:0,t:0});
   else if(a==="fin")go("end");
@@ -153,8 +161,8 @@ app.addEventListener("keydown",e=>{if(e.key!=="Enter")return;const q=e.target.id
 /* ---- editor ---- */
 const fld=(l,v,f,i,m)=>`<label>${l}</label>${m?`<textarea rows="3" data-f="${f}" data-i="${i}">${esc(v)}</textarea>`:`<input data-f="${f}" data-i="${i}" value="${esc(v)}">`}`;
 function edit(){
-  let h=`<h2>シナリオ編集</h2><p style="font-size:14px;margin:0">スポット数：${S.spots.length}（1〜5）</p><p style="font-size:14px;margin:0">変更は、この端末のブラウザに自動保存されます。</p>`+fld("タイトル",S.title,"title",-1)+fld("祝われる人の名前",S.name,"name",-1)+fld("キーワードを間違えられる回数",S.tries,"tries",-1)+fld("ラストキーワード（豪華な宝箱で手に入る）",S.lk===undefined?"AAA":S.lk,"lk",-1);
-  S.spots.forEach((s,i)=>{h+=`<div class="sp"><b>スポット${i+1}${i===0?"（スタート）":""}</b>`+fld("スポット名",s.n,"n",i)+fld("台詞（改行ごとに吹き出し）",s.l,"l",i,1)+fld("クイズ",s.q,"q",i)+fld("クイズの答え",s.a,"a",i)+fld("キーワード（正解すると手に入る）",s.k,"k",i)+fld("待ち時間（時:分:秒　例 0:01:00）",fmtT(TTs(s)),"t",i)+fld("次の行き先の案内",s.x,"x",i)+`<div class="row" style="margin-top:10px"><button class="s" data-a="up" data-i="${i}">↑</button><button class="s" data-a="dn" data-i="${i}">↓</button><button class="s" data-a="del" data-i="${i}" ${S.spots.length<=1?"disabled":""}>削除</button></div></div>`});
+  let h=`<h2>シナリオ編集</h2><p style="font-size:14px;margin:0">スポット数：${S.spots.length}（1〜5）</p><p style="font-size:14px;margin:0">変更は、この端末のブラウザに自動保存されます。</p>`+fld("タイトル",S.title,"title",-1)+fld("祝われる人の名前",S.name,"name",-1)+fld("クイズを間違えられる回数（超えると最初に戻る）",S.tries,"tries",-1)+fld("ラストキーワード（豪華な宝箱で手に入る）",S.lk===undefined?"AAA":S.lk,"lk",-1);
+  S.spots.forEach((s,i)=>{h+=`<div class="sp"><b>スポット${i+1}${i===0?"（スタート）":""}</b>`+fld("スポット名",s.n,"n",i)+fld("台詞（改行ごとに吹き出し）",s.l,"l",i,1)+fld("クイズ",s.q,"q",i)+fld("クイズの答え",s.a,"a",i)+fld("キーワード（正解すると手に入る。空にすると、この部屋には入れません）",s.k,"k",i)+fld("待ち時間（時:分:秒　例 0:01:00）",fmtT(TTs(s)),"t",i)+fld("次の行き先の案内",s.x,"x",i)+`<div class="row" style="margin-top:10px"><button class="s" data-a="up" data-i="${i}">↑</button><button class="s" data-a="dn" data-i="${i}">↓</button><button class="s" data-a="del" data-i="${i}" ${S.spots.length<=1?"disabled":""}>削除</button></div></div>`});
   h+=`<div class="row"><button data-a="add" ${S.spots.length>=5?"disabled":""}>スポットを追加</button><button data-a="prev">プレビュー</button></div><h2>書き出し・読み込み</h2><p style="font-size:14px;margin:0">別の端末で使うときは、書き出した文字列を貼り付けて読み込みます。</p><textarea id="io" rows="4"></textarea><div class="row" style="margin-top:8px"><button class="s" data-a="exp">書き出す</button><button class="s" data-a="imp">読み込む</button></div><div class="msg" id="m"></div>`;
   app.innerHTML=h;
   idb("keys").then(ks=>{document.querySelectorAll("[data-nm]").forEach(el=>{const k=el.dataset.nm;if(getNm(k)&&!(ks||[]).includes(k))el.textContent+="（この端末には未取り込み）"})}).catch(()=>{});
@@ -183,6 +191,16 @@ const menu=document.getElementById("menu"),bMenu=document.getElementById("bMenu"
 bMenu.onclick=()=>{menu.hidden=!menu.hidden;bMenu.setAttribute("aria-expanded",String(!menu.hidden))};
 menu.addEventListener("click",e=>{const m=e.target.dataset&&e.target.dataset.m;if(!m)return;unlock();menu.hidden=true;bMenu.setAttribute("aria-expanded","false");setMode(m)});
 document.addEventListener("click",e=>{if(e.target&&e.target.closest&&!e.target.closest("header")){menu.hidden=true;bMenu.setAttribute("aria-expanded","false")}});
+const mdlg=document.getElementById("mdlg"),mk=document.getElementById("mk"),mm=document.getElementById("mm");
+function longTap(){if(!bMenu.hidden){bMenu.hidden=true;menu.hidden=true;bMenu.setAttribute("aria-expanded","false");if(mode!=="play")setMode("play");toast("メニューを非表示にしました");return}
+  mdlg.hidden=false;mk.value="";mm.textContent="";mk.focus()}
+const mtry=()=>{if(nk(mk.value)==="1110"){mdlg.hidden=true;bMenu.hidden=false;toast("メニューを表示しました（もう一度長押しで非表示）")}else mm.textContent="キーワードが違います。"};
+document.getElementById("mok").onclick=mtry;document.getElementById("mcancel").onclick=()=>{mdlg.hidden=true};
+mdlg.addEventListener("click",e=>{if(e.target===mdlg)mdlg.hidden=true});mk.addEventListener("keydown",e=>{if(e.key==="Enter")mtry()});
+let lpT=null,lpX=0,lpY=0;
+document.addEventListener("pointerdown",e=>{if(!mdlg.hidden||(e.target&&e.target.closest&&e.target.closest("#mdlg")))return;lpX=e.clientX;lpY=e.clientY;clearTimeout(lpT);lpT=setTimeout(longTap,700)});
+["pointerup","pointercancel"].forEach(t=>document.addEventListener(t,()=>clearTimeout(lpT)));
+document.addEventListener("pointermove",e=>{if(Math.abs(e.clientX-lpX)>12||Math.abs(e.clientY-lpY)>12)clearTimeout(lpT)});
 
 /* ---- 3D concert hall ---- */
 let R,Sc,Cam,man,arm,head,bpiv,Z;const notes=[];
@@ -370,7 +388,7 @@ function init3d(){
     if(u>0){C.ry=Math.PI;C.z=.7-4*w;Cam.position.set(-3+(d.x+3)*w,2.6-.9*w,9.8-11*w);Cam.lookAt(d.x,1.6,-4)}
     const u2=c01((dt-.6)/2.2),w2=ez(u2),sg2=U.i<2?.9:-.9;if(u2>0){N.walk=1;N.ry=Math.PI;N.z=.7-4*w2;N.x=d.x+sg2*(1-w2);if(u2>=1)nc.visible=false}
     if(u>=.85&&!U.fd){U.fd=1;el.style.opacity=0;const cb=U.cb;setTimeout(()=>{U.on=false;man.visible=false;if(cb)cb();el.style.opacity=1},600)}};
-  const chestSet=(st,sc)=>{if(st===ks)return;if(!ks)kt=performance.now()/1000;if(st===2)ko=performance.now()/1000;ks=st;cg.visible=st>0;cg.userData.p=sc==="sushi"?[0,1.06,-.5]:sc==="french"?[0,.9,-.6]:[0,0,1.6];cg.scale.setScalar(sc==="french"?.55:1);lid.rotation.x=0};
+  const chestSet=(st,sc)=>{if(st===ks)return;if(!ks)kt=performance.now()/1000;if(st===2)ko=performance.now()/1000;ks=st;cg.visible=st>0;cg.userData.p=sc==="sushi"?[0,1.06,-.5]:sc==="bar"?[0,1.1,-.45]:sc==="french"?[0,.9,-.6]:[0,0,1.6];cg.scale.setScalar(sc==="french"?.55:sc==="bar"?.8:1);lid.rotation.x=0};
   const chestAnim=s=>{if(!ks)return;const p=cg.userData.p,a=c01((s-kt)/.9),e=1-(1-a)*(1-a);cg.position.set(p[0],p[1]+(1-e)*3+Math.abs(Math.sin(a*9))*.12*(1-a),p[2]);cl.intensity=ks===2?2.2:.5+.3*Math.sin(s*4);lid.rotation.x=ks===2?-1.6*ez(c01((s-ko)/.6)):0};
   window.__anim=s=>{if(U.on)anim2(s);chestAnim(s);if(hlv)hlv.material.opacity=.14+.12*Math.sin(s*4)};
   const bubTex=t=>tex(512,160,(g,w,h)=>{g.fillStyle="#fffaf0";g.strokeStyle="#6e1429";g.lineWidth=6;g.beginPath();g.moveTo(40,8);g.arcTo(w-8,8,w-8,h-40,32);g.arcTo(w-8,h-40,40,h-40,32);g.lineTo(w/2+20,h-40);g.lineTo(w/2,h-8);g.lineTo(w/2-20,h-40);g.arcTo(8,h-40,8,8,32);g.arcTo(8,8,w-8,8,32);g.closePath();g.fill();g.stroke();g.fillStyle="#2a0a12";g.font='bold 48px "Shippori Mincho","Hiragino Mincho ProN",serif';g.textAlign="center";g.textBaseline="middle";g.fillText(t,w/2,(h-40)/2+4,w-60)});
@@ -430,7 +448,7 @@ function init3d(){
   cy(.27,.75,WH,0,1.15,0,fch);cy(.28,.06,IND,0,1.45,0,fch);sph(.19,SK,0,1.72,0,fch);cy(.21,.3,WH,0,2.02,0,fch);cy(.215,.07,IND,0,1.9,0,fch);
   cy(.07,.55,WH,-.34,1.2,.05,fch,-.3);cy(.07,.55,WH,.3,1.25,.2,fch,-.9);cy(.16,.02,WH,.3,1.3,.42,fch);sph(.13,M(0xd0d3d8),.3,1.4,.42,fch,1,.8,1);
   const frA=s=>{const d=s-fs0,w=d<3.8,t=c01(d/3.8);som.position.set(6-4.5*t,w?Math.abs(Math.sin(d*9))*.03:0,.9);lgA.rotation.x=w?Math.sin(d*9)*.6:0;lgB.rotation.x=-lgA.rotation.x;som.rotation.y=-Math.PI/2*(1-c01((d-3.8)/.5));fch.position.set(-6+4.5*t,w?Math.abs(Math.sin(d*9+1))*.03:0,.9);lgC.rotation.x=w?Math.sin(d*9)*.6:0;lgD.rotation.x=-lgC.rotation.x;fch.rotation.y=Math.PI/2*(1-c01((d-3.8)/.5));fdone=!w&&d>4.2};
-  const bubUpd=()=>{if(sn==="french")bsp.position.set(som.position.x,2.45,som.position.z);bsp.visible=!!bubT&&(sn==="sushi"||(sn==="french"&&fdone))};
+  const bubUpd=()=>{if(sn==="french")bsp.position.set(som.position.x,2.45,som.position.z);bsp.visible=!!bubT&&(sn==="sushi"||sn==="bar"||(sn==="french"&&fdone))};
   let finOn=false,finT=0;
   const bq=new THREE.Group();bq.visible=false;bq.position.set(0,.66,.55);bq.rotation.x=.2;man.add(bq);
   const bcone=new THREE.Mesh(new THREE.ConeGeometry(.27,.62,18),M(0xf4e3d3,{roughness:.7}));bcone.rotation.x=Math.PI;bq.add(bcone);
@@ -482,11 +500,46 @@ function init3d(){
     const b=ez(c01((s-lt-1.3)/.9));llid.rotation.x=-1.9*b;lcl.intensity=3*b;lbeam.material.opacity=.22*b;
     if(b>.3)lsp.forEach(m=>{const d=m.userData;d.t-=h;if(!d.v||d.t<0){d.t=1+Math.random();m.position.set((Math.random()-.5)*.6,.6,(Math.random()-.5)*.4);d.v=[(Math.random()-.5)*1.2,2.2+Math.random()*1.6,(Math.random()-.5)*.8];m.visible=true}
       d.v[1]-=2.6*h;m.position.x+=d.v[0]*h;m.position.y+=d.v[1]*h;m.position.z+=d.v[2]*h;m.rotation.x+=.1;m.rotation.y+=.13})};
-  const SC={hall:{c:[0,.28,.8,.8],cam:[0,2.7,8.6,0,1.1,-.2],bg:0x14090d,n:[1.9,1.2,1.2]},void:{c:[0,0,.7,.45],cam:[-3,2.6,9.8,0,1.7,-2.2],bg:0x0a0710,n:[0,.7,.85]},sushi:{c:[-2.4,0,.8,.5],cam:[0,2.4,6.4,0,1.2,-1],bg:0x0b1a26,n:[-1.2,1.1,.9]},french:{c:[0,0,2.1,.42],cam:[0,2.4,7,0,1.1,-.6],bg:0x0f0a08,n:[1.1,2.1,.8]}};
+  const br=new THREE.Group();br.visible=false;Sc.add(br);
+  const brW=[],brBulbs=[],CRM=M(0xf6efe4,{roughness:.9}),OAK=M(0xd9b27c,{roughness:.5}),MBL=M(0xf7f7f5,{roughness:.2});
+  bx(12,.2,8,M(0xe9d1a8,{roughness:.5}),0,-.1,0,br);bx(12,5,.3,CRM,0,2.5,-4,br);bx(12,1.4,.32,M(0xbfe3d4),0,.7,-3.99,br);
+  bx(6.4,2.6,.05,M(0xdff0f7,{roughness:.1}),0,2.9,-3.8,br);
+  [2,2.8,3.6].forEach((y,r)=>{bx(6,.06,.35,OAK,0,y,-3.65,br);for(let k=0;k<9;k++){const col=[0xe85a7a,0x4adfff,0xffd24a,0x7ad07a,0xb48cff,0xff9a4a,0xf4f4f4,0x5aa0ff,0xff7ac0][(k+r*2)%9],x=-2.6+k*.65,h=.3+((k*7+r*3)%4)*.05;cy(.07,h,M(col,{roughness:.2}),x,y+.03+h/2,-3.65,br);cy(.03,.14,M(col,{roughness:.2}),x,y+.03+h+.07,-3.65,br)}});
+  const neon=new THREE.Mesh(new THREE.PlaneGeometry(1.8,.9),new THREE.MeshBasicMaterial({map:tex(256,128,(g,w,h)=>{g.font="bold 84px Georgia,serif";g.textAlign="center";g.fillStyle="#ff6fb1";g.shadowColor="#ff6fb1";g.shadowBlur=20;g.fillText("BAR",w/2,h/2+30)}),transparent:true}));neon.position.set(0,4.25,-3.78);br.add(neon);
+  bx(7,.1,1.3,MBL,0,1.05,-1.05,br);bx(7,1,1.1,OAK,0,.5,-1,br);bx(7.04,.05,1.14,GD,0,.98,-1,br);cy(.04,7,GD,0,.25,-.35,br,0,Math.PI/2);
+  [-.3,.9,2.1,3.3].forEach((x,k)=>{cy(.22,.08,M([0xff9ac0,0x9ae0c8,0xffe07a,0x9ac8ff][k]),x,.75,.1,br);cy(.03,.7,GD,x,.38,.1,br);cy(.2,.03,GD,x,.03,.1,br)});
+  [[-2.8,0xff6a8a],[-1.9,0x4adfff],[-.6,0xffd24a],[.5,0x7ad07a],[1.6,0xb48cff],[2.7,0xff9a4a]].forEach(([x,col])=>{tap(.065,.025,.2,GS,x,1.2,-.75,br);tap(.05,.02,.1,M(col),x,1.16,-.75,br);cy(.006,.2,M(0xffffff),x+.03,1.3,-.75,br,0,.3)});
+  cy(.07,.2,M(0xffffff),3.1,1.2,-.7,br);[0xff7ac0,0xffe07a,0xff9a4a].forEach((c,k)=>sph(.07,M(c),3.1+(k-1)*.07,1.38+k%2*.03,-.7,br));
+  [-2.4,0,2.4].forEach(x=>{cy(.01,1.2,BK,x,4.2,-1,br);sph(.28,new THREE.MeshBasicMaterial({color:0xfff0c0}),x,3.5,-1,br)});
+  for(let i=0;i<18;i++){const x=-5.5+i*.647,y=4.75-.35*(1-(x/5.5)*(x/5.5)),b=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),new THREE.MeshBasicMaterial({color:[0xff9ac0,0xffe07a,0x9ae0c8,0x9ac8ff][i%4]}));b.position.set(x,y,-3.7);br.add(b);brBulbs.push(b)}
+  [-5,5].forEach(x=>{cy(.28,.4,M(0xc97c4a),x,.2,-3.2,br);for(let k=0;k<6;k++){const a=k/6*6.283;sph(.2,M(0x3a9a5a),x+Math.cos(a)*.22,.8+k%2*.25,-3.2+Math.sin(a)*.16,br,1,1.6,1)}});
+  const bl1=new THREE.PointLight(0xfff3dc,1.6,16);bl1.position.set(0,3.6,1.5);br.add(bl1);const bl2=new THREE.PointLight(0xffd8ec,.8,12);bl2.position.set(-3.2,3,-1);br.add(bl2);const bl3=new THREE.PointLight(0xdcf0ff,.8,12);bl3.position.set(3.2,3,-1);br.add(bl3);
+  const mkWoman=(x,hair,dress,hs,pose)=>{const c=new THREE.Group();c.position.set(x,0,-2.3);const D=M(dress,{roughness:.55}),SN=M(0xf3cfb0,{roughness:.5}),HR=M(hair,{roughness:.5});
+    cy(.26,.85,D,0,1.2,0,c);cy(.27,.06,GD,0,1,0,c);
+    const hg=new THREE.Group();hg.position.y=1.78;sph(.17,SN,0,0,0,hg);
+    if(hs==="bun"){sph(.19,HR,0,.05,-.03,hg,1,.8,1);sph(.08,HR,0,.24,-.05,hg)}
+    else if(hs==="long"){sph(.2,HR,0,.04,-.04,hg,1,.9,1);sph(.17,HR,0,-.25,-.14,hg,1,1.6,.7)}
+    else if(hs==="bob"){sph(.2,HR,0,.03,-.03,hg,1.05,.95,1);sph(.2,HR,0,-.07,-.08,hg,1.1,.9,.9)}
+    else{sph(.19,HR,0,.05,-.03,hg,1,.8,1);sph(.07,HR,0,.02,-.22,hg);tap(.06,.02,.4,HR,0,-.18,-.25,hg)}
+    [-.06,.06].forEach(a=>sph(.02,BK,a,.02,.15,hg));[-.1,.1].forEach(a=>sph(.025,M(0xff9fb0),a,-.04,.13,hg));bx(.07,.012,.01,M(0xc0405a),0,-.08,.16,hg);c.add(hg);
+    const mkA=sx=>{const a=new THREE.Group();a.position.set(sx*.3,1.55,0);cy(.05,.5,SN,0,-.25,0,a);sph(.055,SN,0,-.52,0,a);c.add(a);return a};
+    const aL=mkA(-1),aR=mkA(1);
+    if(pose==="shake")cy(.05,.22,M(0xc9ccd2,{roughness:.2}),0,-.62,0,aR);
+    if(pose==="glass"){tap(.07,.03,.16,GS,0,-.62,0,aR);tap(.055,.025,.08,M(0xff6a8a),0,-.6,0,aR)}
+    if(pose==="bottle"){cy(.045,.28,M(0x2f6b3a),0,-.65,0,aR);cy(.02,.12,M(0x2f6b3a),0,-.85,0,aR)}
+    br.add(c);brW.push({c,hg,aL,aR,pose})};
+  mkWoman(-2.1,0x6a3a1a,0xe0405a,"bun","shake");mkWoman(-.7,0xf0d070,0xf8f4f0,"long","wave");mkWoman(.7,0x1a1a22,0x5ad0a8,"bob","bottle");mkWoman(2.1,0xa8501a,0xffd24a,"pony","glass");
+  const barAnim=s=>{brW.forEach((w,i)=>{w.hg.rotation.y=Math.sin(s*.9+i)*.25;w.hg.rotation.z=Math.sin(s*1.3+i*2)*.06;w.c.position.y=Math.sin(s*1.5+i)*.02;
+      if(w.pose==="shake"){w.aR.rotation.set(-1.6+Math.sin(s*14)*.25,0,.1);w.aL.rotation.set(-1.2,0,-.2)}
+      else if(w.pose==="wave"){w.aL.rotation.set(0,0,-2.5+Math.sin(s*5)*.4);w.aR.rotation.set(0,0,.15)}
+      else if(w.pose==="bottle"){w.aR.rotation.set(-1.25+Math.sin(s*2)*.12,0,.05);w.aL.rotation.set(-.9,0,-.15)}
+      else{w.aR.rotation.set(-1.4+Math.sin(s*1.5)*.08,0,.05);w.aL.rotation.set(0,0,-.15)}});
+    brBulbs.forEach((b,i)=>b.scale.setScalar(1+Math.sin(s*3+i*1.3)*.25))};
+  const SC={hall:{c:[0,.28,.8,.8],cam:[0,2.7,8.6,0,1.1,-.2],bg:0x14090d,n:[1.9,1.2,1.2]},void:{c:[0,0,.7,.45],cam:[-3,2.6,9.8,0,1.7,-2.2],bg:0x0a0710,n:[0,.7,.85]},sushi:{c:[-2.4,0,.8,.5],cam:[0,2.4,6.4,0,1.2,-1],bg:0x0b1a26,n:[-1.2,1.1,.9]},french:{c:[0,0,2.1,.42],cam:[0,2.4,7,0,1.1,-.6],bg:0x0f0a08,n:[1.1,2.1,.8]},bar:{c:[-2.4,0,.8,.5],cam:[0,2.4,6.4,0,1.2,-1],bg:0xf2e6d8,n:[-1.2,1.1,.9]}};
   Z={sync:(sc,i,nms,u,ch,bub,fin,lx)=>{NM=nms||[];
-    if(sc!==sn||(sc==="void"&&i!==cx)){sn=sc;cx=i;const f=SC[sc];hall.forEach(o=>o.visible=sc==="hall");vd.visible=sc==="void";sg.visible=sc==="sushi";fg.visible=sc==="french";fs0=performance.now()/1000;fdone=false;som.position.set(6,0,.9);fch.position.set(-6,0,.9);Sc.background.set(f.bg);Sc.fog.color.set(f.bg);by=f.c[1];C.x=sc==="void"?DX[i]:f.c[0];C.z=f.c[2];C.sc=f.c[3];C.ry=0;man.visible=true;nc.visible=true;N.x=sc==="void"?DX[i]+(i<2?.9:-.9):f.n[0];N.z=sc==="void"?.7:f.n[1];N.sc=sc==="void"?.85:f.n[2];N.ry=0;N.walk=0;Cam.position.set(f.cam[0],f.cam[1],f.cam[2]);Cam.lookAt(f.cam[3],f.cam[4],f.cam[5]);U={on:false,i:0,f:0,s:0,v:null,m:"",fd:0,cb:null};sk.forEach(p=>p.visible=false);hlv=null;el.style.opacity=1;
+    if(sc!==sn||(sc==="void"&&i!==cx)){sn=sc;cx=i;const f=SC[sc];hall.forEach(o=>o.visible=sc==="hall");vd.visible=sc==="void";sg.visible=sc==="sushi";fg.visible=sc==="french";br.visible=sc==="bar";fs0=performance.now()/1000;fdone=false;som.position.set(6,0,.9);fch.position.set(-6,0,.9);Sc.background.set(f.bg);Sc.fog.color.set(f.bg);by=f.c[1];C.x=sc==="void"?DX[i]:f.c[0];C.z=f.c[2];C.sc=f.c[3];C.ry=0;man.visible=true;nc.visible=true;N.x=sc==="void"?DX[i]+(i<2?.9:-.9):f.n[0];N.z=sc==="void"?.7:f.n[1];N.sc=sc==="void"?.85:f.n[2];N.ry=0;N.walk=0;Cam.position.set(f.cam[0],f.cam[1],f.cam[2]);Cam.lookAt(f.cam[3],f.cam[4],f.cam[5]);U={on:false,i:0,f:0,s:0,v:null,m:"",fd:0,cb:null};sk.forEach(p=>p.visible=false);hlv=null;el.style.opacity=1;
       if(sc==="void"){dr.forEach((d,k)=>setDoor2(d,k<i?2:k===i&&!u?1:0,NM[k]||""));if(u)U={on:true,i,f:0,s:performance.now()/1000,v:null,m:"u",fd:0,cb:null};else{dr[i].hl.visible=true;hlv=dr[i].hl}}}
-    chestSet(ch,sc);if(bub!==bubT){bubT=bub;if(bub){bsp.material.map=bubTex(bub);bsp.material.needsUpdate=true}}if(sc==="sushi")bsp.position.set(0,2.95,-2.3);setFin(fin);luxSet(lx)},
+    chestSet(ch,sc);if(bub!==bubT){bubT=bub;if(bub){bsp.material.map=bubTex(bub);bsp.material.needsUpdate=true}}if(sc==="sushi")bsp.position.set(0,2.95,-2.3);if(sc==="bar")bsp.position.set(0,3.05,-2.3);setFin(fin);luxSet(lx)},
     enter:cb=>{U={on:true,i:cx,m:"e",f:0,s:performance.now()/1000,v:null,fd:0,cb}}};
   if(0){
   const vd=new THREE.Group();vd.visible=false;Sc.add(vd);
@@ -515,14 +568,15 @@ function init3d(){
     else if(!open&&U.on){U={on:false,f:0,s:0,v:null};lkR.position.set(2.6,1.05,-2.1);lkR.rotation.set(0,0,0);lkR.visible=true;dR.lf.rotation.y=0;dR.gl.visible=false;dR.li.intensity=0;sk.forEach(p=>p.visible=false)}}};
   }
   let t0=0;(function loop(t){requestAnimationFrame(loop);if(mode!=="play")return;const s=t/1000;
-    man.position.set(C.x,by+Math.sin(s*1.6)*.03,C.z);man.scale.setScalar(C.sc);if(U.on)anim2(s);chestAnim(s);if(sn==="french"){frA(s);frxAnim(s)}bubUpd();ncAnim(s);luxAnim(s);if(sn==="sushi")seaAnim(s);if(hlv)hlv.material.opacity=.14+.12*Math.sin(s*4);pv=s;man.rotation.y=C.ry+Math.sin(s*.6)*.15;ch.rotation.y=s*.3;
+    man.position.set(C.x,by+Math.sin(s*1.6)*.03,C.z);man.scale.setScalar(C.sc);if(U.on)anim2(s);chestAnim(s);if(sn==="french"){frA(s);frxAnim(s)}if(sn==="bar")barAnim(s);bubUpd();ncAnim(s);luxAnim(s);if(sn==="sushi")seaAnim(s);if(hlv)hlv.material.opacity=.14+.12*Math.sin(s*4);pv=s;man.rotation.y=C.ry+Math.sin(s*.6)*.15;ch.rotation.y=s*.3;
     if(finOn)finPose(s);else{arm.rotation.z=.4+Math.sin(s*1.5)*.03;bpiv.rotation.x=-2.4+Math.sin(s*1.5)*.08;}{const w=0;head.rotation.z=w;hp.rotation.z=.7+w}
     notes.forEach(n=>{const d=n.userData,w=Math.sin(s*1.8-d.i*.6),NS=by?1:.5;n.visible=man.visible;n.position.set(C.x+d.x*NS+Math.sin(s*.9-d.i*.6)*.06,d.y*NS+w*.28*NS,C.z+.5);n.material.rotation=w*.2;const k=(.5+.06*w)*NS;n.scale.set(k,k,1)});
     R.render(Sc,Cam)})(0);
 }
-function onResize(){if(!R)return;const el=document.getElementById("stage"),w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;R.setSize(w,h,false);Cam.aspect=w/h;Cam.updateProjectionMatrix()}
+function onResize(){if(!R)return;const el=document.getElementById("stage"),w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;R.setSize(w,h,false);Cam.aspect=w/h;Cam.fov=w/h<1.3?2*Math.atan(Math.tan(Math.PI/8)*1.3/(w/h))*180/Math.PI:45;Cam.updateProjectionMatrix()}
 window.onCG=()=>{unlock();ck=null;bgm(curKey())};
 if(P.ph==="enter")P.ph="door";
+if(P.ph==="fail")P={i:0,ph:"start",li:0,t:0};
 const parseT=v=>{v=String(v).trim();if(v.includes(":")){const p=v.split(":").map(x=>+x||0);while(p.length<3)p.unshift(0);return Math.max(0,p[0]*3600+p[1]*60+p[2])}return Math.max(0,+v||0)};
 const fmtT=s=>Math.floor(s/3600)+":"+String(Math.floor(s/60)%60).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
 const TTs=s=>s.t===undefined||s.t===""?60:parseT(s.t);
@@ -532,7 +586,9 @@ setInterval(tk,200);
 function closeCurtain(done){if(window.CLOSING)return;window.CLOSING=true;const cur=document.getElementById("cur");try{document.getElementById("ct").textContent=S.title||""}catch(e){}
   cur.classList.remove("d","f");cur.classList.add("o","c");void cur.offsetWidth;cur.classList.remove("o");
   setTimeout(()=>{cur.classList.remove("c");window.CLOSING=false;window.CG=false;ck=null;au.pause();done()},2600)}
-const tapDoor=()=>{go("enter");if(Z)Z.enter(()=>go("say",{li:0,t:0}));else go("say",{li:0,t:0})};
+function failRestart(){go("fail");setTimeout(()=>closeCurtain(()=>{resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P);render()}),1800)}
+const roomOk=i=>{const s=S.spots[i];return !!(s&&String(s.k||"").trim())};
+const tapDoor=()=>{if(!roomOk(P.i)){toast("この部屋は、キーワードが設定されていないため入れません。");return}go("enter");if(Z)Z.enter(()=>go("say",{li:0,t:0}));else go("say",{li:0,t:0})};
 window.onTap=k=>{if(mode!=="play"||resume)return;if(k==="door"&&P.ph==="door")tapDoor();else if(k==="chest"&&P.ph==="chest")go("got")};
 try{init3d()}catch(e){showErr("3D: "+e.message)}
 try{render()}catch(e){showErr(e.message)}
