@@ -1,6 +1,6 @@
 // バースデー PWA: 初回のオンライン表示で必要なファイルを保存し、以降はオフラインでも動かします。
 // index.html などを更新したら、下の VERSION の数字を上げてください（古い保存を入れ替えます）。
-const VERSION="v35",CACHE="birthday-"+VERSION;
+const VERSION="v38",CACHE="birthday-"+VERSION;
 const LOCAL=["./","./index.html","./manifest.webmanifest","./scenario.json","./icon-180.png","./icon-192.png","./icon-512.png","./icon-maskable-512.png"];
 const REMOTE=["https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js","https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&display=swap"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(async c=>{
