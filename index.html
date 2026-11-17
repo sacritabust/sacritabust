@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="バースデー">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>バースデー</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&display=swap">
 <style>
@@ -32,6 +33,11 @@ input,textarea{-webkit-user-select:text;user-select:text}
 #mdlg .box{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:16px;width:min(320px,88vw)}
 #kwbar{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);font-size:14px}
 #kwbar[hidden]{display:none}
+#wh{position:fixed;inset:0;z-index:45;background:#fff;opacity:0;pointer-events:none}
+body.sk{overflow:hidden}body.sk #stage{position:fixed;inset:0;height:auto;min-height:0;z-index:30}body.sk #app{display:none}
+#wish{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;color:#f6ecd6;padding:0 24px;opacity:0;pointer-events:none;transition:opacity 2.4s ease-in}
+#wish.on{opacity:1;pointer-events:auto}#wish p{margin:0;font-size:clamp(15px,4.4vw,26px);line-height:1.9;letter-spacing:.08em;white-space:nowrap;text-shadow:0 2px 10px #000,0 0 18px rgba(255,214,130,.6);font-family:"Shippori Mincho","Hiragino Mincho ProN",serif}#wish .sp{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:200px;padding:12px 26px;border:2px solid #d4af5a;border-radius:6px;background:rgba(20,9,13,.55);box-shadow:0 0 18px rgba(212,175,90,.5),inset 0 0 12px rgba(212,175,90,.25);color:#f3d27a}#wish .sp small{font-size:13px;letter-spacing:.2em;color:#e8d9b0}#wish .sp b{font-size:clamp(26px,8vw,38px);letter-spacing:.3em;padding-left:.3em;white-space:nowrap}
+#wish button[hidden]{display:none}body.wishing #cur .t{opacity:0;pointer-events:none}
 .chip{display:inline-block;border:1px solid var(--line);border-radius:12px;padding:1px 10px;margin:2px 4px 2px 0;background:var(--bg)}
 button,input,textarea{font:inherit;color:inherit}
 button{background:var(--acc);color:var(--accink);border:1px solid var(--line);border-radius:3px;padding:10px 18px;min-height:44px;cursor:pointer}
@@ -60,7 +66,7 @@ h1{font-size:22px;margin:0 0 6px}h2{font-size:18px;margin:6px 0}
 #cur.f{opacity:0;transition:opacity .5s}#cur.d{display:none}
 #cur.o,#cur.c{background:transparent}#cur.c .t{transition-delay:1.8s}
 @media(prefers-reduced-motion:reduce){#cur .p{transition-duration:.01s}}
-.fin{animation:pop .9s ease-out}@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+.lc{margin-top:12px;padding:10px 6px 2px 0;border-top:1px solid rgba(214,178,90,.5);white-space:pre-wrap;font-size:15px;line-height:1.7;max-height:6.8em;overflow-y:scroll;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:thin}.lc::-webkit-scrollbar{width:6px}.lc::-webkit-scrollbar-thumb{background:rgba(160,120,40,.6);border-radius:3px}.kl{display:inline-block;opacity:0;font-weight:bold;color:#8a5a10;animation:klp .6s ease-out forwards}@keyframes klp{0%{opacity:0;transform:translateY(16px) scale(.3)}70%{opacity:1;transform:translateY(-5px) scale(1.3)}100%{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.kl{opacity:1;animation:none}}.fin{animation:pop .9s ease-out}@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.fin{animation:none}}
 </style>
 </head>
@@ -80,13 +86,13 @@ document.getElementById("cb").onclick=function(){if(window.CLOSING)return;window
 <div id="stage"></div>
 <main id="app"></main>
 <div id="kwbar" hidden></div>
+<div id="wh"></div>
+<div id="wish"><p>素敵な１年になりますように</p><div class="sp"><small>ラストキーワード</small><b id="wishk"></b></div><button id="wishb" hidden>最初に戻る</button></div>
 <div id="mdlg" hidden><div class="box"><b>メニューを表示</b><p style="margin:6px 0 10px;font-size:14px">キーワードを入力してください。</p><input id="mk" inputmode="numeric" autocomplete="off"><div class="msg" id="mm"></div><div class="row"><button id="mok">OK</button><button class="s" id="mcancel">キャンセル</button></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-const DEF={v2:1,lk:"AAA",title:"〇〇さんのバースデー・コンサート",name:"〇〇",tries:3,spots:[
-{n:"ホワイエ",l:"ようこそ、開演前のホワイエへ。\n本日の主役は、あなたです。",q:"入口近くの案内板に書かれた、いちばん大きな文字は？",a:"ようこそ",k:"1111",x:"次の行き先は「カウンターバー」です。"},
-{n:"カウンターバー",l:"明るいカウンターバーへようこそ。\nどうぞ、おくつろぎください。",q:"カウンターの奥に立っている女性は、何人ですか？（数字で）",a:"4",k:"1111",x:"最後の行き先は「フレンチレストラン」です。"},
-{n:"フレンチレストラン",l:"ごゆっくり、お食事をお楽しみください。",q:"円卓を囲んで座っている貴族は、何人ですか？（数字で）",a:"6",k:"1111",x:""}]};
+const DEF={"v2": 1, "lk": "****", "title": "少し遅れたバースデー・パーティ", "name": "彩華", "tries": 3, "spots": [{"n": "神楽寿司", "l": "さぁ、カウンターへお座りください。\n今日は美味しい『生いくら』もご用意しております。美味しい海の幸とお酒を楽しんでくださいませ。\n何かご用命の際は隣の者へ何なりとご相談くださいませ。\nここでの滞在時間はおよそ2時間です。時間が過ぎたらクイズが出ますので答えて次に繋がるキーワードを入手してください。\nそれではお楽しみくださいませ。", "q": "生いくらの産地は？", "a": "北海道", "k": "AD", "x": "Bar A", "id": "vmle3ed", "t": "0:00:03"}, {"n": "Bar A", "l": "さぁ、いつものバーへようこそ。\nここではわたしからおもてなしをします。\nどうぞ、おくつろぎください。", "q": "昨年のXmasに飲んだ白ワインのシャトーの名前は？", "a": "ムートン", "k": "AM", "x": "謎のスポット", "id": "nr5q1c5", "t": "0:00:03"}, {"n": "謎のスポット", "l": "美味しいお鮨に続いてBARで遊び、いよいよ最後の部屋に来ました。\nとにかくここではゆっくり楽しく美味しいお酒とお食事をお楽しみください。", "q": "ヌガの姉妹店の名前は？", "a": "シノア", "k": "AS", "x": "", "id": "xs8c06g", "t": "0:00:03"}], "lc": "すべてのイベントが終了しました。\nラストキーワードはご褒美です。あなたの隣にいる人は信用できますか？\n信用できるならラストキーワードを使う場所へ隣の人に連れて行って貰ってください。\n行く場合は『行く』ボタンを押してください。断る場合は『最初に戻る』ボタンを押して、今夜は安全に帰りましょう。"};
+const EDITABLE=true;
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const norm=s=>String(s).normalize("NFKC").trim().toLowerCase();
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
@@ -106,7 +112,7 @@ const SIL="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABA
 const unlock=()=>{if(ul)return;ul=true;if(!IOS)try{const AC=window.AudioContext||window.webkitAudioContext;actx=new AC();gn=actx.createGain();gn.gain.value=vol;actx.createMediaElementSource(au).connect(gn);gn.connect(actx.destination);actx.resume()}catch(e){}au.src=SIL;au.play().then(()=>{if(au.src===SIL)au.pause()}).catch(()=>{})};
 const db=()=>new Promise((r,j)=>{const q=indexedDB.open("bdc",1);q.onupgradeneeded=()=>q.result.createObjectStore("a");q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)});
 const idb=(m,k,v)=>db().then(d=>new Promise((r,j)=>{const s=d.transaction("a",m==="get"||m==="keys"?"readonly":"readwrite").objectStore("a"),q=m==="get"?s.get(k):m==="put"?s.put(v,k):m==="del"?s.delete(k):s.getAllKeys();q.onsuccess=()=>r(q.result);q.onerror=()=>j(q.error)}));
-const curKey=()=>mode!=="play"?null:(resume||P.ph==="start"||P.ph==="end")?"start":(P.ph==="door"||P.ph==="enter")?null:(S.spots[P.i]||S.spots[0]).id;
+const curKey=()=>mode!=="play"?null:(resume||P.ph==="start"||P.ph==="end"||P.ph==="bye"||P.ph==="go"||P.ph==="sky")?"start":(P.ph==="door"||P.ph==="enter")?null:(S.spots[P.i]||S.spots[0]).id;
 const getNm=k=>k==="start"?S.bgm:(S.spots.find(s=>s.id===k)||{}).m;
 const setNm=(k,v)=>{if(k==="start")S.bgm=v;else{const s=S.spots.find(s=>s.id===k);if(s)s.m=v}};
 function bgm(k){if(!window.CG||k===ck)return;ck=k;if(off||!k){au.pause();return}
@@ -117,37 +123,41 @@ const go=(ph,o={})=>{Object.assign(P,{ph},o);sv("prog",P);msg="";render()};
 
 const nk=v=>String(v).normalize("NFKC").toLowerCase().replace(/[\s,，、・\-－ー]/g,"");
 const wantKw=()=>S.spots.map(s=>nk(P.kw&&P.kw[s.id]!==undefined?P.kw[s.id]:(s.k||"1111"))).join("");
-function renderKw(){const b=document.getElementById("kwbar"),ks=mode==="play"&&!resume&&P.kw?S.spots.map((s,i)=>P.kw[s.id]!==undefined?`<span class="chip">${i+1}：${esc(P.kw[s.id])}</span>`:"").join("")+(P.fo&&P.ph==="end"?`<span class="chip">★ ラスト：${esc(S.lk||"AAA")}</span>`:""):"";b.innerHTML=ks?`🗝 手に入れたキーワード　${ks}`:"";b.hidden=!ks;document.body.style.paddingBottom=ks?"64px":""}
-function render(){
+function renderKw(){const b=document.getElementById("kwbar"),ks=mode==="play"&&!resume&&P.kw&&!["go","sky"].includes(P.ph)?S.spots.map((s,i)=>P.kw[s.id]!==undefined?`<span class="chip">${i+1}：${esc(P.kw[s.id])}</span>`:"").join("")+(P.fo&&P.ph==="end"?`<span class="chip">★ ラスト：${esc(S.lk||"AAA")}</span>`:""):"";b.innerHTML=ks?`🗝 手に入れたキーワード　${ks}`:"";b.hidden=!ks;document.body.style.paddingBottom=ks?"64px":""}
+function render(){phaseFx();
   document.getElementById("stage").style.display=mode==="play"?"block":"none";
   if(mode!=="play"){ck=null;au.pause();renderKw();return mode==="edit"?edit():sound()}
   if(!S.spots[P.i])P={i:0,ph:"start",li:0,t:0};const sp=S.spots[P.i];talk=false;let h="";
   if(resume){h=`<div class="bub"><b>${esc(S.title)}</b>\n前回の続きがあります。</div><div class="row"><button data-a="cont">続きから</button><button class="s" data-a="restart">最初から</button></div>`}
   else if(P.ph==="start"){h=`<h1>${esc(S.title)}</h1><div class="bub">今日の主役は、あなたです。\n${esc(S.name)}さんのために、開演です。</div><button data-a="begin">はじめる</button>${S.bgm?` <button class="s" data-a="mus">♪ 曲を流す</button>`:""}`}
-  else if(P.ph==="door"){talk=true;const nm=esc(sp.n);h=`<div class="bub"><small>行き先のご案内</small>${P.u?"鍵が開きました！\n次の行き先は「"+nm+"」です。":"最初の行き先は「"+nm+"」です。\nもう鍵は開いています。"}${roomOk(P.i)?"\nドアをちょんとタップすると、扉が開いて、中へ入れますよ。":"\nただし、この部屋はキーワードが設定されていないため、入れません。"}</div>${Z?"":'<button data-a="tapd">ドアを開ける</button>'}`}
+  else if(P.ph==="door"){talk=true;const nm=esc(sp.n);h=`<div class="bub"><small>行き先のご案内</small>${P.u?"鍵が開きました！\n次の行き先は「"+nm+"」です。":"最初の行き先は「"+nm+"」です。\nもう鍵は開いています。"}${roomOk(P.i)?"\nドアをちょんとタップすると、扉が開いて、中へ入れますよ。":"\nただし、この部屋はキーワードが設定されていないため、入れません。"}</div>${roomOk(P.i)&&!Z?'<button data-a="tapd">ドアを開ける</button>':""}${roomOk(P.i)?"":'<button data-a="endday">最初に戻る</button>'}`}
   else if(P.ph==="enter"){talk=true;h=`<div class="bub">それでは、ご案内します。\nついてきてください。</div>`}
   else if(P.ph==="wait"){talk=true;h=`<div class="bub"><small>${esc(sp.n)}</small>しばし、お楽しみください。\nのこり <b id="tm"></b></div><button class="s" data-a="skip">スキップ</button>`;setTimeout(tk,0)}
   else if(P.ph==="chest"){talk=true;h=`<div class="bub">お見事です！\n宝箱が現れました。タップして、開けてみましょう。</div>${Z?"":'<button data-a="tapc">宝箱を開ける</button>'}`}
-  else if(P.ph==="got"){talk=true;P.kw=P.kw||{};if(P.kw[sp.id]===undefined){P.kw[sp.id]=sp.k||"1111";sv("prog",P)}const nx=P.i+1<S.spots.length;h=`<div class="bub"><small>${esc(sp.n)}</small>宝箱が開きました！\nキーワード「${esc(P.kw[sp.id])}」を手に入れました。${nx&&P.i<2?"\n次の扉の鍵が開きます。":""}</div><button data-a="after">${nx?(P.i<2?"扉へ戻る":"次へ"):"フィナーレへ"}</button>`}
+  else if(P.ph==="got"){talk=true;P.kw=P.kw||{};if(P.kw[sp.id]===undefined){P.kw[sp.id]=sp.k||"1111";sv("prog",P)}const nx=P.i+1<S.spots.length;h=`<div class="bub"><small>${esc(sp.n)}</small>宝箱が開きました！\nキーワード「${Array.from(String(P.kw[sp.id])).map((c,k)=>`<span class="kl" style="animation-delay:${(.7+k*.45).toFixed(2)}s">${esc(c)}</span>`).join("")}」を手に入れました。${nx&&P.i<2?"\n次の扉の鍵が開きます。":""}</div><button data-a="after">${nx?(P.i<2?"扉へ戻る":roomOk(P.i+1)?"次へ":"最初に戻る"):"フィナーレへ"}</button>`}
+  else if(P.ph==="go"||P.ph==="sky"){talk=false;h=""}
+  else if(P.ph==="bye"){talk=true;h=`<div class="bub fin"><small>お知らせ</small>今日のイベントは、ここで終わりです。\n次をお楽しみに♫</div>`}
   else if(P.ph==="fail"){talk=true;h=`<div class="bub"><small>残念…</small>${S.tries}回、間違えてしまいました。\nもう一度、最初からやり直しましょう。</div>`}
   else if(P.ph==="say"){talk=true;const L=lines();h=`<div class="bub"><small>${esc(sp.n)}</small>${esc(L[P.li]||"")}</div><button data-a="next">次へ</button>`}
   else if(P.ph==="quiz"){talk=true;h=`<div class="bub"><small>${esc(sp.n)}</small>${esc(sp.q)}</div><label for="kw">答えを入力</label><div class="row"><input id="kw" autocomplete="off" style="flex:1"><button data-a="ans">答える</button></div><div class="msg" id="m">${esc(msg)}</div>`}
   else if(P.ph==="reveal"){talk=true;h=`<div class="bub">答えは「${esc(sp.a||sp.k)}」でした。\n気を取り直して、先へ進みましょう。</div><button data-a="toGo">進む</button>`}
   else if(P.ph==="go"){const last=P.i>=S.spots.length-1;h=`<div class="bub"><small>行き先のご案内</small>${esc(sp.x||"")}</div><button data-a="${last?"fin":"nextSpot"}">${last?"フィナーレへ":"次のスポットへ"}</button>`}
-  else if(P.ph==="end"){h=P.fo?`<div class="bub fin"><h1>Happy Birthday, ${esc(S.name)}!</h1>豪華な宝箱が開きました！\nラストキーワード「${esc(S.lk||"AAA")}」を手に入れました。</div><button data-a="restart">最初に戻る</button>`:`<div class="bub"><small>最後の宝箱</small>おめでとうございます！\nここまでに手に入れたキーワードを、順番に入力してください。\n集めたキーワードは、画面の下に出ています。</div><label for="fk">キーワード</label><div class="row"><input id="fk" autocomplete="off" style="flex:1"><button data-a="fok">OK</button></div><div class="msg" id="m"></div><button class="s" data-a="restart">最初に戻る</button>`}
-  app.innerHTML=h;const k=document.getElementById("kw");if(k)k.focus();bgm(curKey());renderKw();if(Z){const sc=resume||mode!=="play"?"hall":(P.ph==="door"||P.ph==="enter")?"void":["say","wait","chest","quiz","reveal","got","fail"].includes(P.ph)?(P.i===0?"sushi":P.i===1?"bar":P.i===2?"french":"hall"):"hall";Z.sync(sc,Math.min(P.i,2),[0,1,2].map(k=>(S.spots[k]||{}).n||""),sc==="void"&&P.ph==="door"&&P.u?1:0,P.ph==="chest"?1:P.ph==="got"?2:0,P.ph==="say"?(P.i===0?"いらっしゃいませ":P.i===1?"いらっしゃいませ♪":P.i===2?"お待ちしておりました。":""):"",mode==="play"&&!resume&&P.ph==="end",mode==="play"&&!resume&&P.ph==="end"&&P.fo?1:0);if(P.u){P.u=0;sv("prog",P)}}
+  else if(P.ph==="end"){h=P.fo?`<div class="bub fin"><h1>Happy Birthday, ${esc(S.name)}!</h1>豪華な宝箱が開きました！\nラストキーワード「${esc(S.lk||"AAA")}」を手に入れました。${String(S.lc||"").trim()?`<div class="lc">${esc(S.lc)}</div>`:""}</div><div class="row"><button data-a="restart">最初に戻る</button><button data-a="go">行く</button></div>`:`<div class="bub"><small>最後の宝箱</small>おめでとうございます！\nここまでに手に入れたキーワードを、順番に入力してください。\n集めたキーワードは、画面の下に出ています。</div><label for="fk">キーワード</label><div class="row"><input id="fk" autocomplete="off" style="flex:1"><button data-a="fok">OK</button></div><div class="msg" id="m"></div><button class="s" data-a="restart">最初に戻る</button>`}
+  app.innerHTML=h;const k=document.getElementById("kw");if(k)k.focus();bgm(curKey());renderKw();if(Z){const sc=resume||mode!=="play"?"hall":P.ph==="sky"?"sky":(P.ph==="door"||P.ph==="enter")?"void":["say","wait","chest","quiz","reveal","got","fail"].includes(P.ph)?(P.i===0?"sushi":P.i===1?"bar":P.i===2?"french":"hall"):"hall";Z.sync(sc,Math.min(P.i,2),[0,1,2].map(k=>(S.spots[k]||{}).n||""),sc==="void"&&P.ph==="door"&&P.u?1:0,P.ph==="chest"?1:P.ph==="got"?2:0,P.ph==="say"?(P.i===0?"いらっしゃいませ":P.i===1?"いらっしゃいませ♪":P.i===2?"お待ちしておりました。":""):"",mode==="play"&&!resume&&(P.ph==="end"||P.ph==="go"||P.ph==="sky"),mode==="play"&&!resume&&(P.ph==="end"||P.ph==="go")&&P.fo?1:0,P.ph==="got"?String((P.kw||{})[sp.id]||""):"");if(P.u){P.u=0;sv("prog",P)}}
 }
 app.addEventListener("click",e=>{const a=e.target.dataset.a;if(!a)return;unlock();
   if(mode!=="play")return editAct(e.target,a);
   if(a==="mus"){off=false;ck=null;bgm("start")}
   else if(a==="cont"){resume=false;render()}
+  else if(a==="go")startGo();
   else if(a==="restart"){const rs=()=>{resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P);render()};if(P.ph==="end"&&!resume)closeCurtain(rs);else rs()}
   else if(a==="begin")go("door",{i:0,li:0,t:0,u:0});
   else if(a==="skip")go("quiz",{t:0});
   else if(a==="tapd")tapDoor();
+  else if(a==="endday")endDay();
   else if(a==="tapc")go("got");
   else if(a==="fok"){const v=nk(document.getElementById("fk").value);if(v!==""&&v===wantKw())go("end",{fo:1});else document.getElementById("m").textContent="キーワードが違います。画面の下に出ているキーワードを、順番に入力してください。"}
-  else if(a==="after"){const i=P.i;if(i+1>=S.spots.length)go("end");else if(i<2)go("door",{i:i+1,u:1,li:0,t:0});else if(!roomOk(i+1))toast("次の部屋は、キーワードが設定されていないため入れません。編集画面で設定してください。");else go("say",{i:i+1,li:0,t:0})}
+  else if(a==="after"){const i=P.i;if(i+1>=S.spots.length)go("end");else if(i<2)go("door",{i:i+1,u:1,li:0,t:0});else if(!roomOk(i+1))endDay();else go("say",{i:i+1,li:0,t:0})}
   else if(a==="next"){P.li+1<lines().length?go("say",{li:P.li+1}):go(TT()>0?"wait":"quiz",{t:0,w:Date.now()})}
   else if(a==="ans"){const v=document.getElementById("kw").value,sp=S.spots[P.i];
     if(norm(v)===norm(sp.a||sp.k))go("chest");
@@ -161,16 +171,16 @@ app.addEventListener("keydown",e=>{if(e.key!=="Enter")return;const q=e.target.id
 /* ---- editor ---- */
 const fld=(l,v,f,i,m)=>`<label>${l}</label>${m?`<textarea rows="3" data-f="${f}" data-i="${i}">${esc(v)}</textarea>`:`<input data-f="${f}" data-i="${i}" value="${esc(v)}">`}`;
 function edit(){
-  let h=`<h2>シナリオ編集</h2><p style="font-size:14px;margin:0">スポット数：${S.spots.length}（1〜5）</p><p style="font-size:14px;margin:0">変更は、この端末のブラウザに自動保存されます。</p>`+fld("タイトル",S.title,"title",-1)+fld("祝われる人の名前",S.name,"name",-1)+fld("クイズを間違えられる回数（超えると最初に戻る）",S.tries,"tries",-1)+fld("ラストキーワード（豪華な宝箱で手に入る）",S.lk===undefined?"AAA":S.lk,"lk",-1);
+  let h=`<h2>シナリオ編集</h2><p style="font-size:14px;margin:0">スポット数：${S.spots.length}（1〜5）</p><p style="font-size:14px;margin:0">変更は、この端末のブラウザに自動保存されます。全端末に反映するには、下の「scenario.json を出力」を使います。</p>`+fld("タイトル",S.title,"title",-1)+fld("祝われる人の名前",S.name,"name",-1)+fld("クイズを間違えられる回数（超えると最初に戻る）",S.tries,"tries",-1)+fld("ラストキーワード（豪華な宝箱で手に入る）",S.lk===undefined?"AAA":S.lk,"lk",-1)+fld("ラストキーワードを受け取るときのコメント（フィナーレ画面に表示。改行できます。空なら表示しません）",S.lc||"","lc",-1,1);
   S.spots.forEach((s,i)=>{h+=`<div class="sp"><b>スポット${i+1}${i===0?"（スタート）":""}</b>`+fld("スポット名",s.n,"n",i)+fld("台詞（改行ごとに吹き出し）",s.l,"l",i,1)+fld("クイズ",s.q,"q",i)+fld("クイズの答え",s.a,"a",i)+fld("キーワード（正解すると手に入る。空にすると、この部屋には入れません）",s.k,"k",i)+fld("待ち時間（時:分:秒　例 0:01:00）",fmtT(TTs(s)),"t",i)+fld("次の行き先の案内",s.x,"x",i)+`<div class="row" style="margin-top:10px"><button class="s" data-a="up" data-i="${i}">↑</button><button class="s" data-a="dn" data-i="${i}">↓</button><button class="s" data-a="del" data-i="${i}" ${S.spots.length<=1?"disabled":""}>削除</button></div></div>`});
-  h+=`<div class="row"><button data-a="add" ${S.spots.length>=5?"disabled":""}>スポットを追加</button><button data-a="prev">プレビュー</button></div><h2>書き出し・読み込み</h2><p style="font-size:14px;margin:0">別の端末で使うときは、書き出した文字列を貼り付けて読み込みます。</p><textarea id="io" rows="4"></textarea><div class="row" style="margin-top:8px"><button class="s" data-a="exp">書き出す</button><button class="s" data-a="imp">読み込む</button></div><div class="msg" id="m"></div>`;
-  app.innerHTML=h;
+  h+=`<div class="row"><button data-a="add" ${S.spots.length>=5?"disabled":""}>スポットを追加</button><button data-a="prev">プレビュー</button></div><h2>scenario.json を出力</h2><p style="font-size:14px;margin:0">この端末で直した内容を、全端末に反映するための scenario.json にします。出力した文字列（またはファイル）で、GitHub の scenario.json を丸ごと置き換えて保存してください。他の端末は、次に開いたときに新しい内容になります。</p><textarea id="io" rows="6" readonly></textarea><div class="row" style="margin-top:8px"><button data-a="copy">コピーする</button><button class="s" data-a="save">ファイルで保存・共有</button></div><div class="msg" id="m"></div><h2>読み込み</h2><p style="font-size:14px;margin:0">scenario.json の中身を貼り付けて、この端末に読み込めます。</p><textarea id="io2" rows="4"></textarea><div class="row" style="margin-top:8px"><button class="s" data-a="imp">読み込む</button></div>`;
+  app.innerHTML=h;{const io=document.getElementById("io");if(io)io.value=scnOut().text}
   idb("keys").then(ks=>{document.querySelectorAll("[data-nm]").forEach(el=>{const k=el.dataset.nm;if(getNm(k)&&!(ks||[]).includes(k))el.textContent+="（この端末には未取り込み）"})}).catch(()=>{});
 }
 app.addEventListener("change",e=>{if(e.target.id==="snd"){off=!e.target.checked;sv("snd",{off,vol});if(off)au.pause();return}const k=e.target.dataset.au,f=e.target.files&&e.target.files[0];if(!k||!f)return;
   readBuf(f).then(buf=>idb("put",k,{buf,type:mimeOf(f),name:f.name})).then(()=>{setNm(k,f.name);sv("scn",S);vw()}).catch(e=>{alert("曲を保存できませんでした。（"+(e&&e.name||"error")+"）")})});
-app.addEventListener("input",e=>{const t=e.target,f=t.dataset.f;if(t.id==="vol"){setVol(t.value/100);return}if(!f||mode!=="edit")return;const i=+t.dataset.i;
-  if(i<0)S[f]=f==="tries"?Math.max(1,+t.value||1):t.value;else S.spots[i][f]=t.value;sv("scn",S)});
+app.addEventListener("input",e=>{const t=e.target,f=t.dataset.f;if(t.id==="vol"){setVol(t.value/100);return}if(!f||mode!=="edit"||!EDITABLE)return;const i=+t.dataset.i;
+  if(i<0)S[f]=f==="tries"?Math.max(1,+t.value||1):t.value;else S.spots[i][f]=t.value;sv("scn",S);{const io=document.getElementById("io");if(io)io.value=scnOut().text}});
 function editAct(t,a){const i=+t.dataset.i,m=()=>document.getElementById("m");
   if(a==="try"){const k=t.dataset.k;if(ck===k&&!au.paused){au.pause();ck=null}else{off=false;ck=null;bgm(k)}return}
   if(a==="rm"){const k=t.dataset.k;idb("del",k).catch(()=>0);setNm(k,"");sv("scn",S);vw();return}
@@ -179,15 +189,20 @@ function editAct(t,a){const i=+t.dataset.i,m=()=>document.getElementById("m");
   else if(a==="up"&&i>0)[S.spots[i-1],S.spots[i]]=[S.spots[i],S.spots[i-1]];
   else if(a==="dn"&&i<S.spots.length-1)[S.spots[i+1],S.spots[i]]=[S.spots[i],S.spots[i+1]];
   else if(a==="prev"){sv("scn",S);setMode("play",true);return}
-  else if(a==="exp"){document.getElementById("io").value=JSON.stringify(S);m().textContent="コピーして保存してください。";return}
-  else if(a==="imp"){try{const o=JSON.parse(document.getElementById("io").value);if(!o.spots||!o.spots.length)throw 0;o.spots=o.spots.slice(0,5);S=o;fix();sv("scn",S);}catch(x){m().textContent="読み込めません。書き出した文字列をそのまま貼り付けてください。";return}}
+  else if(a==="copy"){const o=scnOut();const done=()=>{sv("srev",o.rev);m().textContent="コピーしました。GitHub の scenario.json に貼り付けて保存してください。（版番号 "+o.rev+"）"};
+    const fb=()=>{const io=document.getElementById("io");io.removeAttribute("readonly");io.focus();io.select();try{document.execCommand("copy")}catch(e){}io.setAttribute("readonly","");done()};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(o.text).then(done).catch(fb);else fb();return}
+  else if(a==="save"){const o=scnOut();let f=null;try{f=new File([o.text],"scenario.json",{type:"application/json"})}catch(e){}
+    const dl=()=>{const u=URL.createObjectURL(new Blob([o.text],{type:"application/json"})),x=document.createElement("a");x.href=u;x.download="scenario.json";document.body.appendChild(x);x.click();x.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);sv("srev",o.rev);m().textContent="scenario.json を保存しました。（版番号 "+o.rev+"）"};
+    if(f&&navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:"scenario.json"}).then(()=>{sv("srev",o.rev);m().textContent="共有しました。GitHub の scenario.json を置き換えてください。（版番号 "+o.rev+"）"}).catch(()=>{});else dl();return}
+  else if(a==="imp"){try{const o=JSON.parse(document.getElementById("io2").value);if(!o.spots||!o.spots.length)throw 0;o.spots=o.spots.slice(0,5);const rv=o.rev;delete o.rev;o.bgm=S.bgm;if(!o.bgm)delete o.bgm;o.spots.forEach(x=>{if(!x.id)x.id=uid();const m0=(S.spots.find(y=>y.id===x.id)||{}).m;if(m0)x.m=m0;else delete x.m});S=o;fix();sv("scn",S);if(rv!==undefined&&Number(rv)>Number(ld("srev",0)))sv("srev",rv)}catch(x){m().textContent="読み込めません。scenario.json の中身をそのまま貼り付けてください。";return}}
   sv("scn",S);edit();}
 function sound(){let h=`<h2>サウンド</h2><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="snd" style="width:auto" ${off?"":"checked"}>音を鳴らす</label>${IOS?`<p style="font-size:14px;margin:6px 0">iPhoneでは、音量は本体の音量ボタンで調整してください。</p>`:`<label for="vol">音量</label><input type="range" id="vol" min="0" max="100" value="${Math.round(vol*100)}">`}<h2>曲の設定</h2><p style="font-size:14px;margin:0">開始画面と各スポットの曲を、ファイルから選べます。</p><label>開始画面の曲</label>`+aud("start",S.bgm);
   S.spots.forEach((s,i)=>{h+=`<label>スポット${i+1}「${esc(s.n)}」の曲</label>`+aud(s.id,s.m)});
   app.innerHTML=h+`<div class="msg" id="m"></div>`;
   idb("keys").then(ks=>{document.querySelectorAll("[data-nm]").forEach(el=>{const k=el.dataset.nm;if(getNm(k)&&!(ks||[]).includes(k))el.textContent+="（この端末には未取り込み）"})}).catch(()=>{})}
 function setMode(m,reset){mode=m;document.getElementById("mPlay").hidden=m==="play";if(reset){resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P)}render();if(m==="play")onResize()}
-const menu=document.getElementById("menu"),bMenu=document.getElementById("bMenu");
+const menu=document.getElementById("menu"),bMenu=document.getElementById("bMenu");if(!EDITABLE){const eb=menu.querySelector('[data-m="edit"]');if(eb)eb.style.display="none"}
 bMenu.onclick=()=>{menu.hidden=!menu.hidden;bMenu.setAttribute("aria-expanded",String(!menu.hidden))};
 menu.addEventListener("click",e=>{const m=e.target.dataset&&e.target.dataset.m;if(!m)return;unlock();menu.hidden=true;bMenu.setAttribute("aria-expanded","false");setMode(m)});
 document.addEventListener("click",e=>{if(e.target&&e.target.closest&&!e.target.closest("header")){menu.hidden=true;bMenu.setAttribute("aria-expanded","false")}});
@@ -386,14 +401,18 @@ function init3d(){
     const q=ez(c01(dt/1.4));d.lf.rotation.y=-1.75*q;d.rm.visible=q>0;d.li.intensity=1.4*q;d.hl.visible=false;hlv=null;
     const u=c01((dt-1)/2.2),w=ez(u);
     if(u>0){C.ry=Math.PI;C.z=.7-4*w;Cam.position.set(-3+(d.x+3)*w,2.6-.9*w,9.8-11*w);Cam.lookAt(d.x,1.6,-4)}
-    const u2=c01((dt-.6)/2.2),w2=ez(u2),sg2=U.i<2?.9:-.9;if(u2>0){N.walk=1;N.ry=Math.PI;N.z=.7-4*w2;N.x=d.x+sg2*(1-w2);if(u2>=1)nc.visible=false}
+    const u2=c01((dt-.6)/2.2),w2=ez(u2),sg2=U.i<2?1.05:-1.05;if(u2>0){N.walk=1;N.ry=Math.PI;N.z=.7-4*w2;N.x=d.x+sg2*(1-w2);if(u2>=1)nc.visible=false}
     if(u>=.85&&!U.fd){U.fd=1;el.style.opacity=0;const cb=U.cb;setTimeout(()=>{U.on=false;man.visible=false;if(cb)cb();el.style.opacity=1},600)}};
   const chestSet=(st,sc)=>{if(st===ks)return;if(!ks)kt=performance.now()/1000;if(st===2)ko=performance.now()/1000;ks=st;cg.visible=st>0;cg.userData.p=sc==="sushi"?[0,1.06,-.5]:sc==="bar"?[0,1.1,-.45]:sc==="french"?[0,.9,-.6]:[0,0,1.6];cg.scale.setScalar(sc==="french"?.55:sc==="bar"?.8:1);lid.rotation.x=0};
-  const chestAnim=s=>{if(!ks)return;const p=cg.userData.p,a=c01((s-kt)/.9),e=1-(1-a)*(1-a);cg.position.set(p[0],p[1]+(1-e)*3+Math.abs(Math.sin(a*9))*.12*(1-a),p[2]);cl.intensity=ks===2?2.2:.5+.3*Math.sin(s*4);lid.rotation.x=ks===2?-1.6*ez(c01((s-ko)/.6)):0};
+  const chestAnim=s=>{if(!ks)return;const p=cg.userData.p,a=c01((s-kt)/.9),e=1-(1-a)*(1-a);cg.position.set(p[0],p[1]+(1-e)*3+Math.abs(Math.sin(a*9))*.12*(1-a),p[2]);cl.intensity=ks===2?2.2:.5+.3*Math.sin(s*4);lid.rotation.x=ks===2?-1.6*ez(c01((s-ko)/.6)):0;
+    if(ks===2){const n=kwSp.length,gap=Math.min(.55,4.6/Math.max(n,1));kwSp.forEach((q,i)=>{const d=s-ko-.7-i*.45;if(d<0){q.visible=false;return}q.visible=true;const u=ez(c01(d/.9)),tx=p[0]+(i-(n-1)/2)*gap,ty=p[1]+1.55,tz=p[2]+.3;q.position.set(p[0]+(tx-p[0])*u,p[1]+.3+(ty-p[1]-.3)*u+Math.sin(Math.PI*u)*.5+(u>=1?Math.sin(s*2.4+i)*.05:0),p[2]+(tz-p[2])*u);const k=.55*(.3+.7*u);q.scale.set(k,k,1)})}else kwSp.forEach(q=>q.visible=false)};
+  const kwSp=[];let kwStr="";
+  const glyph=c=>{const q=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(128,128,(g,w,h)=>{g.font='bold 92px "Shippori Mincho",Georgia,serif';g.textAlign="center";g.textBaseline="middle";g.shadowColor="#ffcf4a";g.shadowBlur=18;g.lineWidth=6;g.strokeStyle="#8a5a10";g.fillStyle="#fff1b8";g.strokeText(c,w/2,h/2+4);g.fillText(c,w/2,h/2+4)}),transparent:true,depthTest:false}));q.renderOrder=12;q.visible=false;Sc.add(q);return q};
+  const setKw=k=>{k=k||"";if(k===kwStr)return;kwStr=k;kwSp.forEach(q=>{Sc.remove(q);q.material.map.dispose();q.material.dispose()});kwSp.length=0;if(k)Array.from(k).slice(0,12).forEach(c=>kwSp.push(glyph(c)))};
   window.__anim=s=>{if(U.on)anim2(s);chestAnim(s);if(hlv)hlv.material.opacity=.14+.12*Math.sin(s*4)};
   const bubTex=t=>tex(512,160,(g,w,h)=>{g.fillStyle="#fffaf0";g.strokeStyle="#6e1429";g.lineWidth=6;g.beginPath();g.moveTo(40,8);g.arcTo(w-8,8,w-8,h-40,32);g.arcTo(w-8,h-40,40,h-40,32);g.lineTo(w/2+20,h-40);g.lineTo(w/2,h-8);g.lineTo(w/2-20,h-40);g.arcTo(8,h-40,8,8,32);g.arcTo(8,8,w-8,8,32);g.closePath();g.fill();g.stroke();g.fillStyle="#2a0a12";g.font='bold 48px "Shippori Mincho","Hiragino Mincho ProN",serif';g.textAlign="center";g.textBaseline="middle";g.fillText(t,w/2,(h-40)/2+4,w-60)});
   const bsp=new THREE.Sprite(new THREE.SpriteMaterial({map:bubTex("いらっしゃいませ"),transparent:true,depthTest:false}));bsp.scale.set(2.8,.875,1);bsp.visible=false;bsp.renderOrder=10;Sc.add(bsp);
-  let bubT="",fs0=0,fdone=false;
+  let bubT="",fs0=0,fdone=false;const bws=[-2.1,-.7,.7,2.1].map(x=>{const q=new THREE.Sprite(bsp.material);q.scale.set(1.9,.594,1);q.position.set(x,2.8,-1.9);q.visible=false;q.renderOrder=10;Sc.add(q);return q});
   const fg=new THREE.Group();fg.visible=false;Sc.add(fg);
   const CLm=M(0xf0e6d2,{roughness:.9}),ST=M(0x6b6258,{roughness:.95}),DK=M(0x3a2410,{roughness:.6}),IR=M(0x2b2b30,{roughness:.5});
   const rd=(r,h,m,x,y,z)=>{const o=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,32),m);o.position.set(x,y,z);fg.add(o);return o};
@@ -448,7 +467,7 @@ function init3d(){
   cy(.27,.75,WH,0,1.15,0,fch);cy(.28,.06,IND,0,1.45,0,fch);sph(.19,SK,0,1.72,0,fch);cy(.21,.3,WH,0,2.02,0,fch);cy(.215,.07,IND,0,1.9,0,fch);
   cy(.07,.55,WH,-.34,1.2,.05,fch,-.3);cy(.07,.55,WH,.3,1.25,.2,fch,-.9);cy(.16,.02,WH,.3,1.3,.42,fch);sph(.13,M(0xd0d3d8),.3,1.4,.42,fch,1,.8,1);
   const frA=s=>{const d=s-fs0,w=d<3.8,t=c01(d/3.8);som.position.set(6-4.5*t,w?Math.abs(Math.sin(d*9))*.03:0,.9);lgA.rotation.x=w?Math.sin(d*9)*.6:0;lgB.rotation.x=-lgA.rotation.x;som.rotation.y=-Math.PI/2*(1-c01((d-3.8)/.5));fch.position.set(-6+4.5*t,w?Math.abs(Math.sin(d*9+1))*.03:0,.9);lgC.rotation.x=w?Math.sin(d*9)*.6:0;lgD.rotation.x=-lgC.rotation.x;fch.rotation.y=Math.PI/2*(1-c01((d-3.8)/.5));fdone=!w&&d>4.2};
-  const bubUpd=()=>{if(sn==="french")bsp.position.set(som.position.x,2.45,som.position.z);bsp.visible=!!bubT&&(sn==="sushi"||sn==="bar"||(sn==="french"&&fdone))};
+  const bubUpd=()=>{if(sn==="french")bsp.position.set(som.position.x,2.45,som.position.z);bsp.visible=!!bubT&&(sn==="sushi"||(sn==="french"&&fdone));bws.forEach(q=>q.visible=!!bubT&&sn==="bar")};
   let finOn=false,finT=0;
   const bq=new THREE.Group();bq.visible=false;bq.position.set(0,.66,.55);bq.rotation.x=.2;man.add(bq);
   const bcone=new THREE.Mesh(new THREE.ConeGeometry(.27,.62,18),M(0xf4e3d3,{roughness:.7}));bcone.rotation.x=Math.PI;bq.add(bcone);
@@ -495,26 +514,46 @@ function init3d(){
   const lbeam=new THREE.Mesh(new THREE.ConeGeometry(.9,3,24,1,true),new THREE.MeshBasicMaterial({color:0xffe9a0,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));lbeam.rotation.x=Math.PI;lbeam.position.set(0,2.1,0);lux.add(lbeam);
   const lsp=[];for(let i=0;i<40;i++){const m=new THREE.Mesh(new THREE.TetrahedronGeometry(.045),new THREE.MeshBasicMaterial({color:[0xffd86a,0xfff2c0,0xff9ab8][i%3]}));m.userData={v:null,t:i*.08};m.visible=false;lux.add(m);lsp.push(m)}
   let lo=0,lt=0;
+  const dq=new THREE.Group();dq.visible=false;lux.add(dq);
+  const qTex=tex(256,256,(g,w,h)=>{g.textAlign="center";g.textBaseline="middle";g.font='bold 230px Georgia,"Shippori Mincho",serif';g.shadowColor="rgba(120,220,255,.95)";g.shadowBlur=34;g.fillStyle="#fff";g.fillText("?",w/2,h/2+8);g.shadowBlur=0;g.globalCompositeOperation="source-atop";const gr=g.createLinearGradient(0,0,w,h);[[0,"#ffffff"],[.25,"#9fe6ff"],[.5,"#ffffff"],[.72,"#e0a8ff"],[1,"#8fd8ff"]].forEach(([o,c])=>gr.addColorStop(o,c));g.fillStyle=gr;g.fillRect(0,0,w,h);g.strokeStyle="rgba(255,255,255,.9)";g.lineWidth=5;for(let i=-4;i<9;i++){g.beginPath();g.moveTo(i*40,0);g.lineTo(i*40+120,h);g.stroke()}g.strokeStyle="rgba(60,140,200,.45)";g.lineWidth=3;for(let i=-2;i<9;i++){g.beginPath();g.moveTo(i*46+80,0);g.lineTo(i*46-60,h);g.stroke()}});
+  const glowTex=tex(128,128,(g,w,h)=>{const r=g.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);r.addColorStop(0,"rgba(255,255,255,.95)");r.addColorStop(.3,"rgba(150,230,255,.5)");r.addColorStop(1,"rgba(150,230,255,0)");g.fillStyle=r;g.fillRect(0,0,w,h)});
+  const starTex=tex(128,128,(g,w,h)=>{g.translate(w/2,h/2);g.fillStyle="#fff";g.shadowColor="#bff";g.shadowBlur=10;g.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4,r=i%2?7:60;g.lineTo(Math.cos(a)*r,Math.sin(a)*r)}g.closePath();g.fill()});
+  const mkS=(map,add)=>{const q=new THREE.Sprite(new THREE.SpriteMaterial({map,transparent:true,depthTest:false,depthWrite:false,blending:add?THREE.AdditiveBlending:THREE.NormalBlending}));q.renderOrder=14;dq.add(q);return q};
+  const dGl=mkS(glowTex,1),dF1=mkS(starTex,1),dF2=mkS(starTex,1),dQ=mkS(qTex,0);dQ.renderOrder=15;
+  const dSp=Array.from({length:16},(_,i)=>{const q=mkS(starTex,1);q.userData={a:i/16*6.283,r:.7+(i%4)*.22,sp:.6+(i%5)*.2,p:i*1.3};return q});
+  const dqAnim=s=>{if(!lo||!finOn){dq.visible=false;return}const t=s-lt-2-3.9;if(t<0){dq.visible=false;return}dq.visible=true;
+    const u=ez(c01(t/1.3)),y=.55+.6*u+Math.sin(s*1.8)*.05*u,sc=(.2+1.0*u)*(1+.06*Math.sin(s*3));
+    dQ.position.set(0,y,.1);dQ.scale.set(sc*1.1,sc*1.1,1);dQ.material.rotation=Math.sin(s*1.3)*.12;
+    dGl.position.set(0,y,.05);const gs=sc*3.2*(1+.12*Math.sin(s*4));dGl.scale.set(gs,gs,1);dGl.material.opacity=.55+.25*Math.sin(s*5);
+    const fl=Math.max(0,1-t/.9);dF1.position.set(0,y,.12);dF2.position.set(0,y,.12);const a1=sc*(2.2+fl*5),a2=sc*(1.5+fl*3);dF1.scale.set(a1,a1,1);dF1.material.rotation=s*.8;dF2.scale.set(a2,a2,1);dF2.material.rotation=-s*.55+.4;
+    dSp.forEach(q=>{const d=q.userData,a=d.a+s*d.sp;q.position.set(Math.cos(a)*d.r*u,y+Math.sin(a*1.3)*d.r*.8*u,.15);const k=.3*u*(.5+.5*Math.sin(s*6+d.p));q.scale.set(k,k,1)})};
   const luxSet=f=>{f=!!f;if(f===!!lo)return;lo=f?1:0;lt=performance.now()/1000;lux.visible=f;if(!f){llid.rotation.x=0;lcl.intensity=0;lbeam.material.opacity=0;lsp.forEach(m=>{m.visible=false;m.userData.v=null})}};
   const luxAnim=s=>{if(!lo)return;const h=Math.min(.05,Math.max(0,s-pv)),a=c01((s-lt)/1.1),e=1-(1-a)*(1-a);lux.scale.setScalar(1.3);lux.position.set(0,(1-e)*5+Math.abs(Math.sin(a*8))*.1*(1-a),2.4);
     const b=ez(c01((s-lt-1.3)/.9));llid.rotation.x=-1.9*b;lcl.intensity=3*b;lbeam.material.opacity=.22*b;
     if(b>.3)lsp.forEach(m=>{const d=m.userData;d.t-=h;if(!d.v||d.t<0){d.t=1+Math.random();m.position.set((Math.random()-.5)*.6,.6,(Math.random()-.5)*.4);d.v=[(Math.random()-.5)*1.2,2.2+Math.random()*1.6,(Math.random()-.5)*.8];m.visible=true}
       d.v[1]-=2.6*h;m.position.x+=d.v[0]*h;m.position.y+=d.v[1]*h;m.position.z+=d.v[2]*h;m.rotation.x+=.1;m.rotation.y+=.13})};
   const br=new THREE.Group();br.visible=false;Sc.add(br);
-  const brW=[],brBulbs=[],CRM=M(0xf6efe4,{roughness:.9}),OAK=M(0xd9b27c,{roughness:.5}),MBL=M(0xf7f7f5,{roughness:.2});
-  bx(12,.2,8,M(0xe9d1a8,{roughness:.5}),0,-.1,0,br);bx(12,5,.3,CRM,0,2.5,-4,br);bx(12,1.4,.32,M(0xbfe3d4),0,.7,-3.99,br);
-  bx(6.4,2.6,.05,M(0xdff0f7,{roughness:.1}),0,2.9,-3.8,br);
+  const brW=[],brBulbs=[],CRM=M(0xb9a68c,{roughness:.9}),OAK=M(0xa97d4c,{roughness:.5}),MBL=M(0xbdb8b0,{roughness:.2});
+  bx(12,.2,8,M(0x9a7c56,{roughness:.5}),0,-.1,0,br);bx(12,5,.3,CRM,0,2.5,-4,br);bx(12,1.4,.32,M(0x7fa396),0,.7,-3.99,br);
+  bx(6.4,2.6,.05,M(0x93aab4,{roughness:.1}),0,2.9,-3.8,br);
   [2,2.8,3.6].forEach((y,r)=>{bx(6,.06,.35,OAK,0,y,-3.65,br);for(let k=0;k<9;k++){const col=[0xe85a7a,0x4adfff,0xffd24a,0x7ad07a,0xb48cff,0xff9a4a,0xf4f4f4,0x5aa0ff,0xff7ac0][(k+r*2)%9],x=-2.6+k*.65,h=.3+((k*7+r*3)%4)*.05;cy(.07,h,M(col,{roughness:.2}),x,y+.03+h/2,-3.65,br);cy(.03,.14,M(col,{roughness:.2}),x,y+.03+h+.07,-3.65,br)}});
   const neon=new THREE.Mesh(new THREE.PlaneGeometry(1.8,.9),new THREE.MeshBasicMaterial({map:tex(256,128,(g,w,h)=>{g.font="bold 84px Georgia,serif";g.textAlign="center";g.fillStyle="#ff6fb1";g.shadowColor="#ff6fb1";g.shadowBlur=20;g.fillText("BAR",w/2,h/2+30)}),transparent:true}));neon.position.set(0,4.25,-3.78);br.add(neon);
-  bx(7,.1,1.3,MBL,0,1.05,-1.05,br);bx(7,1,1.1,OAK,0,.5,-1,br);bx(7.04,.05,1.14,GD,0,.98,-1,br);cy(.04,7,GD,0,.25,-.35,br,0,Math.PI/2);
-  [-.3,.9,2.1,3.3].forEach((x,k)=>{cy(.22,.08,M([0xff9ac0,0x9ae0c8,0xffe07a,0x9ac8ff][k]),x,.75,.1,br);cy(.03,.7,GD,x,.38,.1,br);cy(.2,.03,GD,x,.03,.1,br)});
+  bx(7,.1,1.3,MBL,0,1.05,-1.05,br);bx(7,1,1.1,OAK,0,.5,-1,br);bx(7.04,.05,1.14,GD,0,.98,-1,br);cy(.04,7,GD,0,.25,-.35,br,0,Math.PI/2);bx(11.6,.3,1.3,M(0x7a5a38,{roughness:.6}),0,.15,-2.2,br);
+  [-1.3,-.4,.5,1.4,2.3,3.2].forEach((x,k)=>{cy(.22,.08,M([0xff9ac0,0x9ae0c8,0xffe07a,0x9ac8ff][k%4]),x,.75,.1,br);cy(.03,.7,GD,x,.38,.1,br);cy(.2,.03,GD,x,.03,.1,br)});
   [[-2.8,0xff6a8a],[-1.9,0x4adfff],[-.6,0xffd24a],[.5,0x7ad07a],[1.6,0xb48cff],[2.7,0xff9a4a]].forEach(([x,col])=>{tap(.065,.025,.2,GS,x,1.2,-.75,br);tap(.05,.02,.1,M(col),x,1.16,-.75,br);cy(.006,.2,M(0xffffff),x+.03,1.3,-.75,br,0,.3)});
   cy(.07,.2,M(0xffffff),3.1,1.2,-.7,br);[0xff7ac0,0xffe07a,0xff9a4a].forEach((c,k)=>sph(.07,M(c),3.1+(k-1)*.07,1.38+k%2*.03,-.7,br));
   [-2.4,0,2.4].forEach(x=>{cy(.01,1.2,BK,x,4.2,-1,br);sph(.28,new THREE.MeshBasicMaterial({color:0xfff0c0}),x,3.5,-1,br)});
   for(let i=0;i<18;i++){const x=-5.5+i*.647,y=4.75-.35*(1-(x/5.5)*(x/5.5)),b=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),new THREE.MeshBasicMaterial({color:[0xff9ac0,0xffe07a,0x9ae0c8,0x9ac8ff][i%4]}));b.position.set(x,y,-3.7);br.add(b);brBulbs.push(b)}
   [-5,5].forEach(x=>{cy(.28,.4,M(0xc97c4a),x,.2,-3.2,br);for(let k=0;k<6;k++){const a=k/6*6.283;sph(.2,M(0x3a9a5a),x+Math.cos(a)*.22,.8+k%2*.25,-3.2+Math.sin(a)*.16,br,1,1.6,1)}});
-  const bl1=new THREE.PointLight(0xfff3dc,1.6,16);bl1.position.set(0,3.6,1.5);br.add(bl1);const bl2=new THREE.PointLight(0xffd8ec,.8,12);bl2.position.set(-3.2,3,-1);br.add(bl2);const bl3=new THREE.PointLight(0xdcf0ff,.8,12);bl3.position.set(3.2,3,-1);br.add(bl3);
-  const mkWoman=(x,hair,dress,hs,pose)=>{const c=new THREE.Group();c.position.set(x,0,-2.3);const D=M(dress,{roughness:.55}),SN=M(0xf3cfb0,{roughness:.5}),HR=M(hair,{roughness:.5});
+  const bl1=new THREE.PointLight(0xffe6c0,.95,16);bl1.position.set(0,3.6,1.5);br.add(bl1);const bl2=new THREE.PointLight(0xffc8e0,.55,12);bl2.position.set(-3.2,3,-1);br.add(bl2);const bl3=new THREE.PointLight(0xc8e4ff,.55,12);bl3.position.set(3.2,3,-1);br.add(bl3);
+  {const SFM=M(0x8a2a46,{roughness:.8}),SFD=M(0x6a1c34,{roughness:.8}),SFC=M(0xa83a5a,{roughness:.8});
+    const mkSofa=(x,z,ry)=>{const sf=new THREE.Group(),L=1.7;
+      bx(L,.3,.85,SFM,0,.42,0,sf);bx(L,.65,.22,SFD,0,.85,.33,sf);bx(.22,.5,.85,SFD,-L/2+.01,.6,0,sf);bx(.22,.5,.85,SFD,L/2-.01,.6,0,sf);[-.4,.4].forEach(q=>bx(.7,.14,.6,SFC,q,.64,-.05,sf));
+      [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([a,b])=>cy(.05,.27,GD,a*(L/2-.1),.13,b*.35,sf));
+      sf.position.set(x,0,z);sf.rotation.y=ry;br.add(sf)};
+    mkSofa(-1.15,2.3,-Math.PI/2);mkSofa(.75,2.3,Math.PI/2);
+    cy(.38,.05,OAK,-.2,.42,2.3,br);cy(.05,.4,GD,-.2,.2,2.3,br);cy(.22,.03,GD,-.2,.02,2.3,br)}
+  const mkWoman=(x,hair,dress,hs,pose)=>{const c=new THREE.Group();c.position.set(x,.3,-2.3);const D=M(dress,{roughness:.55}),SN=M(0xf3cfb0,{roughness:.5}),HR=M(hair,{roughness:.5});
     cy(.26,.85,D,0,1.2,0,c);cy(.27,.06,GD,0,1,0,c);
     const hg=new THREE.Group();hg.position.y=1.78;sph(.17,SN,0,0,0,hg);
     if(hs==="bun"){sph(.19,HR,0,.05,-.03,hg,1,.8,1);sph(.08,HR,0,.24,-.05,hg)}
@@ -529,17 +568,41 @@ function init3d(){
     if(pose==="bottle"){cy(.045,.28,M(0x2f6b3a),0,-.65,0,aR);cy(.02,.12,M(0x2f6b3a),0,-.85,0,aR)}
     br.add(c);brW.push({c,hg,aL,aR,pose})};
   mkWoman(-2.1,0x6a3a1a,0xe0405a,"bun","shake");mkWoman(-.7,0xf0d070,0xf8f4f0,"long","wave");mkWoman(.7,0x1a1a22,0x5ad0a8,"bob","bottle");mkWoman(2.1,0xa8501a,0xffd24a,"pony","glass");
-  const barAnim=s=>{brW.forEach((w,i)=>{w.hg.rotation.y=Math.sin(s*.9+i)*.25;w.hg.rotation.z=Math.sin(s*1.3+i*2)*.06;w.c.position.y=Math.sin(s*1.5+i)*.02;
+  const barAnim=s=>{const lk=ez(c01((s-fs0-5.4)/1.3));brW.forEach((w,i)=>{w.hg.rotation.y=Math.sin(s*.9+i)*.25*(1-.7*lk)+lk*(C.x-w.c.position.x)*.3;w.hg.rotation.z=Math.sin(s*1.3+i*2)*.06;w.c.position.y=.3+Math.sin(s*1.5+i)*.02;
       if(w.pose==="shake"){w.aR.rotation.set(-1.6+Math.sin(s*14)*.25,0,.1);w.aL.rotation.set(-1.2,0,-.2)}
       else if(w.pose==="wave"){w.aL.rotation.set(0,0,-2.5+Math.sin(s*5)*.4);w.aR.rotation.set(0,0,.15)}
       else if(w.pose==="bottle"){w.aR.rotation.set(-1.25+Math.sin(s*2)*.12,0,.05);w.aL.rotation.set(-.9,0,-.15)}
       else{w.aR.rotation.set(-1.4+Math.sin(s*1.5)*.08,0,.05);w.aL.rotation.set(0,0,-.15)}});
     brBulbs.forEach((b,i)=>b.scale.setScalar(1+Math.sin(s*3+i*1.3)*.25))};
-  const SC={hall:{c:[0,.28,.8,.8],cam:[0,2.7,8.6,0,1.1,-.2],bg:0x14090d,n:[1.9,1.2,1.2]},void:{c:[0,0,.7,.45],cam:[-3,2.6,9.8,0,1.7,-2.2],bg:0x0a0710,n:[0,.7,.85]},sushi:{c:[-2.4,0,.8,.5],cam:[0,2.4,6.4,0,1.2,-1],bg:0x0b1a26,n:[-1.2,1.1,.9]},french:{c:[0,0,2.1,.42],cam:[0,2.4,7,0,1.1,-.6],bg:0x0f0a08,n:[1.1,2.1,.8]},bar:{c:[-2.4,0,.8,.5],cam:[0,2.4,6.4,0,1.2,-1],bg:0xf2e6d8,n:[-1.2,1.1,.9]}};
-  Z={sync:(sc,i,nms,u,ch,bub,fin,lx)=>{NM=nms||[];
-    if(sc!==sn||(sc==="void"&&i!==cx)){sn=sc;cx=i;const f=SC[sc];hall.forEach(o=>o.visible=sc==="hall");vd.visible=sc==="void";sg.visible=sc==="sushi";fg.visible=sc==="french";br.visible=sc==="bar";fs0=performance.now()/1000;fdone=false;som.position.set(6,0,.9);fch.position.set(-6,0,.9);Sc.background.set(f.bg);Sc.fog.color.set(f.bg);by=f.c[1];C.x=sc==="void"?DX[i]:f.c[0];C.z=f.c[2];C.sc=f.c[3];C.ry=0;man.visible=true;nc.visible=true;N.x=sc==="void"?DX[i]+(i<2?.9:-.9):f.n[0];N.z=sc==="void"?.7:f.n[1];N.sc=sc==="void"?.85:f.n[2];N.ry=0;N.walk=0;Cam.position.set(f.cam[0],f.cam[1],f.cam[2]);Cam.lookAt(f.cam[3],f.cam[4],f.cam[5]);U={on:false,i:0,f:0,s:0,v:null,m:"",fd:0,cb:null};sk.forEach(p=>p.visible=false);hlv=null;el.style.opacity=1;
-      if(sc==="void"){dr.forEach((d,k)=>setDoor2(d,k<i?2:k===i&&!u?1:0,NM[k]||""));if(u)U={on:true,i,f:0,s:performance.now()/1000,v:null,m:"u",fd:0,cb:null};else{dr[i].hl.visible=true;hlv=dr[i].hl}}}
-    chestSet(ch,sc);if(bub!==bubT){bubT=bub;if(bub){bsp.material.map=bubTex(bub);bsp.material.needsUpdate=true}}if(sc==="sushi")bsp.position.set(0,2.95,-2.3);if(sc==="bar")bsp.position.set(0,3.05,-2.3);setFin(fin);luxSet(lx)},
+  const SC={hall:{c:[0,.28,.8,.8],cam:[0,2.7,8.6,0,1.1,-.2],bg:0x14090d,n:[1.9,1.2,1.2]},void:{c:[0,0,.7,.62],cam:[-3,2.6,9.8,0,1.7,-2.2],bg:0x0a0710,n:[0,.7,.85]},sushi:{c:[-2.4,0,.8,.5],cam:[0,2.4,6.4,0,1.2,-1],bg:0x0b1a26,n:[-1.2,1.1,.9]},french:{c:[0,0,2.1,.42],cam:[0,2.4,7,0,1.1,-.6],bg:0x0f0a08,n:[1.1,2.1,.8]},bar:{c:[-2.4,0,.8,.5],cam:[0,2.4,6.4,0,1.2,-1],bg:0x5a4638,n:[-1.2,1.1,.9]},sky:{c:[0,0,0,.55],cam:[0,2.4,7.5,0,1.2,0],bg:0xffffff,n:[0,0,1]}};
+  const syg=new THREE.Group();syg.visible=false;Sc.add(syg);
+  const SK_N=41,SK_R=2.2,SK_DY=.22,SK_DT=.38;let sk0=0;
+  const skSt=[];for(let i=0;i<SK_N;i++){const th=i*SK_DT,m1=new THREE.MeshBasicMaterial({color:0xffffff}),m2=new THREE.MeshBasicMaterial({color:0x888888}),g=new THREE.Group();g.position.set(SK_R*Math.sin(th),i*SK_DY,SK_R*Math.cos(th));g.rotation.y=th;bx(.8,.08,1.1,m1,0,0,0,g);bx(.8,.06,1.1,m2,0,-.07,0,g);syg.add(g);skSt.push({g,m1,m2})}
+  const dTh=(SK_N-1)*SK_DT,syD=new THREE.Group();syD.position.set(SK_R*Math.sin(dTh),(SK_N-1)*SK_DY+.04,SK_R*Math.cos(dTh));syD.rotation.y=Math.atan2(-Math.cos(dTh),Math.sin(dTh));
+  {const GB=new THREE.MeshBasicMaterial({color:0xd4a437});bx(.16,2.4,.22,GB,-.62,1.2,0,syD);bx(.16,2.4,.22,GB,.62,1.2,0,syD);bx(1.4,.18,.22,GB,0,2.45,0,syD);
+   const gp=new THREE.Mesh(new THREE.PlaneGeometry(1.08,2.35),new THREE.MeshBasicMaterial({map:tex(64,128,(g,w,h)=>{const r=g.createLinearGradient(0,0,0,h);r.addColorStop(0,"#fff6c8");r.addColorStop(1,"#ffd27a");g.fillStyle=r;g.fillRect(0,0,w,h)})}));gp.position.set(0,1.2,-.06);syD.add(gp);
+   const hg=new THREE.Group();hg.position.set(-.54,0,.02);hg.rotation.y=-1.45;bx(1,2.3,.07,new THREE.MeshBasicMaterial({color:0x8a5a2a}),.5,1.2,0,hg);syD.add(hg)}
+  syg.add(syD);syD.scale.setScalar(.001);
+  const skL=new THREE.PointLight(0xffffff,1.1,14);syg.add(skL);
+  const ncol=["#ff5a8a","#ffb43a","#5ad07a","#4aa8ff","#b48cff","#ff7ac0"];
+  const ntx=ncol.map((c,k)=>tex(64,64,(g,w,h)=>{g.font="bold 54px serif";g.textAlign="center";g.textBaseline="middle";g.shadowColor=c;g.shadowBlur=8;g.fillStyle=c;g.fillText("♪♫♬"[k%3],w/2,h/2)}));
+  const htx=["#ff3b6b","#ff7aa8","#e0245e","#ff9ac0"].map(c=>tex(64,64,(g,w,h)=>{g.shadowColor=c;g.shadowBlur=8;g.fillStyle=c;g.translate(w/2,h/2+2);g.beginPath();g.moveTo(0,20);g.bezierCurveTo(-34,-2,-22,-26,0,-10);g.bezierCurveTo(22,-26,34,-2,0,20);g.fill()}));
+  const SKNUM=96;
+  const skN=Array.from({length:SKNUM},(_,i)=>{const heart=i%3===1,q=new THREE.Sprite(new THREE.SpriteMaterial({map:heart?htx[i%4]:ntx[i%6],transparent:true,depthTest:false}));q.renderOrder=16;q.visible=false;const an=Math.random()*6.283,sp=1.4+Math.random()*1.9;q.userData={b:i*.05,vx:Math.cos(an)*sp*.95,vy:Math.sin(an)*sp*1.5+.6,vz:.4+Math.random()*1.4,r:Math.random()*6,k:.7+Math.random()*.5};syg.add(q);return q});
+  const dX=SK_R*Math.sin(dTh),dZ=SK_R*Math.cos(dTh),dY=(SK_N-1)*SK_DY+1.15,oX=-Math.cos(dTh),oZ=Math.sin(dTh);
+  const skAnim=s=>{const t=s-sk0;
+    skSt.forEach((o,i)=>{const a=ez(c01((t-.5-i*.07)/.4));o.g.scale.set(a+.001,a+.001,a+.001);const h=(i/SK_N+s*.07)%1;o.m1.color.setHSL(h,.9,.6);o.m2.color.setHSL(h,.85,.4)});
+    syD.scale.setScalar(ez(c01((t-.5-(SK_N-1)*.07)/.5))+.001);
+    const f=Math.min(40.8,Math.max(0,(t-3.6)/.28)),th=f*SK_DT;
+    C.x=SK_R*Math.sin(th);C.z=SK_R*Math.cos(th);C.y=f*SK_DY+.06+(f>0&&f<40.8?Math.abs(Math.sin(s*10))*.03:0);C.ry=Math.atan2(Math.cos(th),-Math.sin(th));C.sc=.55*ez(c01((t-3)/.5))*(1-ez(c01((f-39.2)/1.5)))+.001;
+    const cyy=C.y+1.2,dist=8.4-1*ez(c01(f/12));Cam.position.set(0,cyy+1.3,dist);Cam.lookAt(0,cyy,0);
+    skL.position.set(C.x,C.y+2.5,C.z+3);sl.position.set(C.x,C.y+6,C.z+4);sl.target.position.set(C.x,C.y+1,C.z);sl.intensity=2;
+    const tE=3.6+39.5*.28;skN.forEach(q=>{const d=q.userData,a=t-tE-d.b;if(a<0||a>4){q.visible=false;return}q.visible=true;
+      q.position.set(dX+d.vx*a,dY+d.vy*a-.25*a*a,dZ+d.vz*a);const k=d.k*(.35+.65*ez(c01(a/.3)));q.scale.set(k,k,1);q.material.opacity=c01(a/.2)*(1-c01((a-3)/1));q.material.rotation=Math.sin(a*3+d.r)*.4})};
+  Z={sync:(sc,i,nms,u,ch,bub,fin,lx,kwt)=>{NM=nms||[];
+    if(sc!==sn||(sc==="void"&&i!==cx)){sn=sc;cx=i;const f=SC[sc];hall.forEach(o=>o.visible=sc==="hall");vd.visible=sc==="void";sg.visible=sc==="sushi";fg.visible=sc==="french";br.visible=sc==="bar";syg.visible=sc==="sky";if(sc==="sky")sk0=performance.now()/1000;fs0=performance.now()/1000;fdone=false;som.position.set(6,0,.9);fch.position.set(-6,0,.9);Sc.background.set(f.bg);Sc.fog.color.set(f.bg);by=f.c[1];C.x=sc==="void"?DX[i]:f.c[0];C.z=f.c[2];C.sc=f.c[3];C.ry=0;man.visible=true;nc.visible=true;N.x=sc==="void"?DX[i]+(i<2?1.05:-1.05):f.n[0];N.z=sc==="void"?.7:f.n[1];N.sc=sc==="void"?1.1:f.n[2];N.ry=0;N.walk=0;Cam.position.set(f.cam[0],f.cam[1],f.cam[2]);Cam.lookAt(f.cam[3],f.cam[4],f.cam[5]);U={on:false,i:0,f:0,s:0,v:null,m:"",fd:0,cb:null};sk.forEach(p=>p.visible=false);hlv=null;el.style.opacity=1;
+      if(sc==="void"){dr.forEach((d,k)=>setDoor2(d,k<i?2:k===i&&!u?1:0,NM[k]||""));if(u){const dd=dr[i];dd.nm.material.map=mkLab(NM[i]||"");dd.nm.material.needsUpdate=true;dd.nm.visible=true;U={on:true,i,f:0,s:performance.now()/1000,v:null,m:"u",fd:0,cb:null}}else{dr[i].hl.visible=true;hlv=dr[i].hl}}}
+    chestSet(ch,sc);if(bub!==bubT){bubT=bub;if(bub){bsp.material.map=bubTex(bub);bsp.material.needsUpdate=true}}if(sc==="sushi")bsp.position.set(0,2.95,-2.3);if(sc==="bar")bsp.position.set(0,3.05,-2.3);setFin(fin);luxSet(lx);setKw(ch===2?kwt:"")},
     enter:cb=>{U={on:true,i:cx,m:"e",f:0,s:performance.now()/1000,v:null,fd:0,cb}}};
   if(0){
   const vd=new THREE.Group();vd.visible=false;Sc.add(vd);
@@ -567,31 +630,66 @@ function init3d(){
     if(open&&!U.on){U={on:true,f:0,s:performance.now()/1000,v:null}}
     else if(!open&&U.on){U={on:false,f:0,s:0,v:null};lkR.position.set(2.6,1.05,-2.1);lkR.rotation.set(0,0,0);lkR.visible=true;dR.lf.rotation.y=0;dR.gl.visible=false;dR.li.intensity=0;sk.forEach(p=>p.visible=false)}}};
   }
-  let t0=0;(function loop(t){requestAnimationFrame(loop);if(mode!=="play")return;const s=t/1000;
-    man.position.set(C.x,by+Math.sin(s*1.6)*.03,C.z);man.scale.setScalar(C.sc);if(U.on)anim2(s);chestAnim(s);if(sn==="french"){frA(s);frxAnim(s)}if(sn==="bar")barAnim(s);bubUpd();ncAnim(s);luxAnim(s);if(sn==="sushi")seaAnim(s);if(hlv)hlv.material.opacity=.14+.12*Math.sin(s*4);pv=s;man.rotation.y=C.ry+Math.sin(s*.6)*.15;ch.rotation.y=s*.3;
+  let t0=0,lean=0,peekOn=false;(function loop(t){requestAnimationFrame(loop);if(mode!=="play")return;const s=t/1000;sl.intensity=sn==="bar"?.55:1.6;Sc.fog.near=sn==="sky"?60:9;Sc.fog.far=sn==="sky"?120:20;pg2.visible=pg2.visible&&sn==="hall";if(sn!=="sky"){sl.position.set(0,6,3);sl.target.position.set(0,1,0)}if(sn==="bar"){const u=c01((s-fs0-.5)/6.3),d=u*13.4;let x,z,ry;
+      if(d<6.5){const k=d/6.5;x=-2.4+6.5*k;z=.8+.3*k;ry=Math.PI/2}
+      else if(d<9.3){const k=(d-6.5)/2.8;x=4.1;z=1.1-2.8*k;ry=Math.PI/2+Math.PI/2*ez(c01(k*1.6))}
+      else{const k=(d-9.3)/4.1;x=4.1-4.1*k;z=-1.7-.2*k;ry=Math.PI+Math.PI/2*ez(c01(k*5))+Math.PI/2*ez(c01((k-.82)/.18))}
+      C.x=x;C.z=z;C.y=.3*ez(c01((-1.2-z)/.45))+(u>0&&u<1?Math.abs(Math.sin(s*9))*.04:0);C.sc=.5+.2*ez(c01((d-9.3)/4.1));C.ry=ry;
+      N.x=-1.2+.25*ez(c01(u/.5));N.z=1.1;N.walk=0;N.ry=.45*ez(c01(u/.4))}
+    if(sn!=="bar")C.y=0;
+    if(sn==="hall"&&finOn&&lo){const t=s-lt-2;peekOn=true;
+      if(t<=0){C.x=0;C.z=.8;C.ry=0;lean=0;N.x=1.9;N.z=1.2;N.ry=0;N.walk=0}
+      else{const w=c01(t/2.6);let x,z,ry;
+        if(w<.55){const k=w/.55;x=-1.6*k;z=.8+.4*k;ry=-Math.PI/2}
+        else{const k=(w-.55)/.45;x=-1.6+.2*k;z=1.2+1.2*k;ry=-Math.PI/2*(1-ez(c01(k*1.8)))}
+        if(t>2.6)ry=Math.PI/2*ez(c01((t-2.6)/.6));
+        C.x=x;C.z=z;C.ry=ry;C.y=t<2.6?Math.abs(Math.sin(s*9))*.04:0;
+        lean=.45*ez(c01((t-3.2)/.8))+(t>4?Math.sin(s*1.8)*.03:0);const q=ez(c01((t-3.6)/2));N.x=1.9-2.7*q;N.z=1.2-.1*q;N.walk=q>0&&q<1?1:0;N.ry=-Math.PI/2*ez(c01(q*10))*(1-ez(c01((q-.7)/.3)))-.43*ez(c01((q-.7)/.3))}}
+    else{lean=0;if(peekOn){peekOn=false;if(sn==="hall"){C.x=0;C.z=.8;C.ry=0;N.x=1.9;N.z=1.2;N.ry=0;N.walk=0}}}
+    if(sn==="sky"){skAnim(s);nc.visible=false}
+    man.position.set(C.x,by+(C.y||0)+Math.sin(s*1.6)*.03,C.z);man.scale.setScalar(C.sc);if(U.on)anim2(s);chestAnim(s);if(sn==="french"){frA(s);frxAnim(s)}if(sn==="bar")barAnim(s);bubUpd();ncAnim(s);luxAnim(s);dqAnim(s);if(sn==="sushi")seaAnim(s);if(hlv)hlv.material.opacity=.14+.12*Math.sin(s*4);pv=s;man.rotation.order="YXZ";man.rotation.y=C.ry+Math.sin(s*.6)*(lean?.03:.15);man.rotation.x=lean;ch.rotation.y=s*.3;
     if(finOn)finPose(s);else{arm.rotation.z=.4+Math.sin(s*1.5)*.03;bpiv.rotation.x=-2.4+Math.sin(s*1.5)*.08;}{const w=0;head.rotation.z=w;hp.rotation.z=.7+w}
-    notes.forEach(n=>{const d=n.userData,w=Math.sin(s*1.8-d.i*.6),NS=by?1:.5;n.visible=man.visible;n.position.set(C.x+d.x*NS+Math.sin(s*.9-d.i*.6)*.06,d.y*NS+w*.28*NS,C.z+.5);n.material.rotation=w*.2;const k=(.5+.06*w)*NS;n.scale.set(k,k,1)});
+    notes.forEach(n=>{const d=n.userData,w=Math.sin(s*1.8-d.i*.6),NS=by?1:.5;n.visible=man.visible&&C.sc>.08;n.position.set(C.x+d.x*NS+Math.sin(s*.9-d.i*.6)*.06,d.y*NS+w*.28*NS+(C.y||0),C.z+.5);n.material.rotation=w*.2;const k=(.5+.06*w)*NS;n.scale.set(k,k,1)});
     R.render(Sc,Cam)})(0);
 }
 function onResize(){if(!R)return;const el=document.getElementById("stage"),w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;R.setSize(w,h,false);Cam.aspect=w/h;Cam.fov=w/h<1.3?2*Math.atan(Math.tan(Math.PI/8)*1.3/(w/h))*180/Math.PI:45;Cam.updateProjectionMatrix()}
 window.onCG=()=>{unlock();ck=null;bgm(curKey())};
 if(P.ph==="enter")P.ph="door";
-if(P.ph==="fail")P={i:0,ph:"start",li:0,t:0};
+if(["fail","bye","go","sky","wishing","wish"].includes(P.ph))P={i:0,ph:"start",li:0,t:0};
 const parseT=v=>{v=String(v).trim();if(v.includes(":")){const p=v.split(":").map(x=>+x||0);while(p.length<3)p.unshift(0);return Math.max(0,p[0]*3600+p[1]*60+p[2])}return Math.max(0,+v||0)};
 const fmtT=s=>Math.floor(s/3600)+":"+String(Math.floor(s/60)%60).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
 const TTs=s=>s.t===undefined||s.t===""?60:parseT(s.t);
 const TT=()=>TTs(S.spots[P.i]||{});
 function tk(){if(mode!=="play"||resume||P.ph!=="wait")return;if(!P.w){P.w=Date.now();sv("prog",P)}const r=Math.ceil(TT()-(Date.now()-P.w)/1000),e=document.getElementById("tm");if(r<=0){go("quiz",{t:0});return}if(e)e.textContent=fmtT(r)}
 setInterval(tk,200);
-function closeCurtain(done){if(window.CLOSING)return;window.CLOSING=true;const cur=document.getElementById("cur");try{document.getElementById("ct").textContent=S.title||""}catch(e){}
-  cur.classList.remove("d","f");cur.classList.add("o","c");void cur.offsetWidth;cur.classList.remove("o");
-  setTimeout(()=>{cur.classList.remove("c");window.CLOSING=false;window.CG=false;ck=null;au.pause();done()},2600)}
+function closeCurtain(done,slow){if(window.CLOSING)return;window.CLOSING=true;const cur=document.getElementById("cur");try{document.getElementById("ct").textContent=S.title||""}catch(e){}
+  cur.classList.remove("d","f");cur.classList.add("o","c");if(slow)cur.querySelectorAll(".p").forEach(p=>p.style.transitionDuration="4.2s");void cur.offsetWidth;cur.classList.remove("o");
+  setTimeout(()=>{cur.classList.remove("c");cur.querySelectorAll(".p").forEach(p=>p.style.transitionDuration="");window.CLOSING=false;window.CG=false;ck=null;au.pause();done()},slow?4400:2600)}
+function scnOut(){const o={rev:(Number(ld("srev",0))||0)+1};const n=Object.assign({},S);delete n.bgm;n.spots=S.spots.map(x=>{const r=Object.assign({},x);delete r.m;return r});Object.assign(o,n);return{rev:o.rev,text:JSON.stringify(o,null,1)}}
+function applyRemote(o){if(!o||!Array.isArray(o.spots)||!o.spots.length||o.rev===undefined)return;
+  if(!(Number(o.rev)>Number(ld("srev",0))))return;
+  const old=S,n=Object.assign({},o);delete n.rev;n.bgm=old.bgm;
+  n.spots=o.spots.slice(0,5).map(x=>{const r=Object.assign({},x);if(!r.id)r.id=uid();const m=(old.spots.find(y=>y.id===r.id)||{}).m;if(m)r.m=m;else delete r.m;return r});
+  if(!n.bgm)delete n.bgm;S=n;fix();sv("scn",S);sv("srev",o.rev);
+  try{document.getElementById("ct").textContent=S.title||""}catch(e){}
+  if(!S.spots[P.i]){P={i:0,ph:"start",li:0,t:0};sv("prog",P);resume=false}
+  if(mode==="play"&&(P.ph==="start"||resume))render()}
+function loadScenario(){try{fetch("scenario.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(applyRemote).catch(()=>{})}catch(e){}}
+function startGo(){if(P.ph!=="end"||!P.fo)return;go("go");setTimeout(()=>{if(P.ph==="go")go("sky")},3600)}
+function phaseFx(){const w=document.getElementById("wh");if(!w)return;
+  if(P.ph==="go"){if(!window.goF){window.goF=1;w.style.transition="opacity 3.4s ease-in";void w.offsetWidth;w.style.opacity=1}}
+  else if(P.ph==="sky"){if(!window.skF){window.skF=1;document.body.classList.add("sk");setTimeout(()=>{try{onResize()}catch(e){}},0);w.style.transition="none";w.style.opacity=1;void w.offsetWidth;w.style.transition="opacity 2.2s ease-out";w.style.opacity=0;setTimeout(()=>{if(P.ph==="sky")skyEnd()},23000)}}
+  else if(P.ph!=="wishing"&&P.ph!=="wish"){window.goF=0;window.skF=0;w.style.transition="none";w.style.opacity=0;document.body.classList.remove("sk","wishing")}}
+function skyEnd(){if(P.ph!=="sky")return;P.ph="wishing";document.body.classList.add("wishing");closeCurtain(()=>{P.ph="wish";document.getElementById("wishk").textContent=S.lk||"AAA";document.getElementById("wish").classList.add("on")},true)}
+document.getElementById("wishb").onclick=()=>{document.body.classList.remove("wishing","sk");document.getElementById("wish").classList.remove("on");window.goF=0;window.skF=0;resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P);try{onResize()}catch(e){}render()};
 function failRestart(){go("fail");setTimeout(()=>closeCurtain(()=>{resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P);render()}),1800)}
+function endDay(){go("bye");setTimeout(()=>closeCurtain(()=>{resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P);render()}),2400)}
 const roomOk=i=>{const s=S.spots[i];return !!(s&&String(s.k||"").trim())};
 const tapDoor=()=>{if(!roomOk(P.i)){toast("この部屋は、キーワードが設定されていないため入れません。");return}go("enter");if(Z)Z.enter(()=>go("say",{li:0,t:0}));else go("say",{li:0,t:0})};
 window.onTap=k=>{if(mode!=="play"||resume)return;if(k==="door"&&P.ph==="door")tapDoor();else if(k==="chest"&&P.ph==="chest")go("got")};
 try{init3d()}catch(e){showErr("3D: "+e.message)}
 try{render()}catch(e){showErr(e.message)}
+loadScenario();
 </script>
 <script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});</script>
 </body>
