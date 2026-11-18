@@ -97,7 +97,8 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const norm=s=>String(s).normalize("NFKC").trim().toLowerCase();
 const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-let S=ld("scn",DEF),P=ld("prog",{i:0,ph:"start",li:0,t:0}),mode="play",resume=P.ph!=="start",msg="",talk=false;
+function normP(p){if(!p||typeof p!=="object"||!p.ph)return{i:0,ph:"start",li:0,t:0};if(["go","sky","wishing","wish"].includes(p.ph)){p.ph="end";p.fo=1}else if(p.ph==="bye"||p.ph==="fail")return{i:0,ph:"start",li:0,t:0};return p}
+let S=ld("scn",DEF),P=normP(ld("prog",{i:0,ph:"start",li:0,t:0})),mode="play",resume=P.ph!=="start",msg="",talk=false;
 const app=document.getElementById("app");
 const uid=()=>Math.random().toString(36).slice(2,9);
 const fix=()=>{let c=0;S.spots.forEach(s=>{if(!s.id){s.id=uid();c=1}});const s0=S.spots[0];if(s0&&s0.n==="ホワイエ"&&(s0.l||"").indexOf("ようこそ、開演前のホワイエ")===0){s0.n="お寿司屋さん";s0.l="カウンターへお座りください。\nしばし、お楽しみくださいませ。";c=1}const s1=S.spots[1];if(s1&&s1.n==="中庭"&&(s1.l||"").indexOf("素敵な音色")===0){s1.n="フレンチレストラン";s1.l="ごゆっくり、お食事をお楽しみください。";c=1}if(S.spots.length===2&&S.spots[0].n==="お寿司屋さん"&&S.spots[1].n==="フレンチレストラン"){S.spots.push(Object.assign({id:uid()},{n:"展望テラス",l:"夜景がきれいですね。\nあとひと息です。",q:"テラスの手すりに結ばれていたリボンの色は？",k:"あお",x:""}));c=1}if(S.spots.length>=3&&S.spots[1].n==="フレンチレストラン"&&S.spots[2].n==="展望テラス"){const a1=S.spots[1],a2=S.spots[2];Object.assign(a1,{n:"カウンターバー",l:"明るいカウンターバーへようこそ。\nどうぞ、おくつろぎください。",q:"カウンターの奥に立っている女性は、何人ですか？（数字で）",a:"4",x:"最後の行き先は「フレンチレストラン」です。"});Object.assign(a2,{n:"フレンチレストラン",l:"ごゆっくり、お食事をお楽しみください。",q:"円卓を囲んで座っている貴族は、何人ですか？（数字で）",a:"6",x:""});if(!S.v2){a1.k="1111";a2.k="1111"}c=1}if(!S.v2){S.spots.forEach(s=>{if(s.a===undefined||s.a===""){if(s.k&&s.k!=="1111"){s.a=s.k;s.k="1111"}else if(!s.k)s.k="1111"}});S.v2=1;c=1}if(S.lk===undefined){S.lk="AAA";c=1}if(c)sv("scn",S)};fix();
@@ -131,7 +132,7 @@ function render(){phaseFx();
   document.getElementById("stage").style.display=mode==="play"?"block":"none";
   if(mode!=="play"){ck=null;au.pause();renderKw();return mode==="edit"?edit():sound()}
   if(!S.spots[P.i])P={i:0,ph:"start",li:0,t:0};const sp=S.spots[P.i];talk=false;let h="";
-  if(resume){h=`<div class="bub"><b class="tt" style="display:block">${esc(S.title)}</b>\n前回の続きがあります。</div><div class="row"><button data-a="cont">続きから</button><button class="s" data-a="restart">最初から</button></div>`}
+  if(resume){h=`<div class="bub"><b class="tt" style="display:block">${esc(S.title)}</b>\n前回の続きがあります。\n（${esc(P.ph==="end"?"フィナーレ":(P.ph==="door"||P.ph==="enter")?"部屋を選ぶ画面":S.spots[P.i]?(P.i+1)+"つ目「"+S.spots[P.i].n+"」の途中":"")}）</div><div class="row"><button data-a="cont">続きから</button><button class="s" data-a="restart">最初から</button></div>`}
   else if(P.ph==="start"){h=`<h1 class="tt">${esc(S.title)}</h1><div class="bub">今日の主役は、あなたです。\n${esc(S.name)}さんのために、開演です。</div><button data-a="begin">はじめる</button>${S.bgm?` <button class="s" data-a="mus">♪ 曲を流す</button>`:""}`}
   else if(P.ph==="door"){talk=true;const nm=esc(sp.n);h=`<div class="bub"><small>行き先のご案内</small>${!roomOk(P.i)?"次の行き先は「"+nm+"」です。\n鍵は開きませんでした。":P.u?"鍵が開きました！\n次の行き先は「"+nm+"」です。":"最初の行き先は「"+nm+"」です。\nもう鍵は開いています。"}${roomOk(P.i)?"\nドアをちょんとタップすると、扉が開いて、中へ入れますよ。":"\nただし、この部屋はキーワードが設定されていないため、入れません。"}</div>${roomOk(P.i)&&!Z?'<button data-a="tapd">ドアを開ける</button>':""}${roomOk(P.i)?"":'<button data-a="endday">最初に戻る</button>'}`}
   else if(P.ph==="enter"){talk=true;h=`<div class="bub">それでは、ご案内します。\nついてきてください。</div>`}
@@ -151,7 +152,7 @@ function render(){phaseFx();
 app.addEventListener("click",e=>{const a=e.target.dataset.a;if(!a)return;unlock();
   if(mode!=="play")return editAct(e.target,a);
   if(a==="mus"){off=false;ck=null;bgm("start")}
-  else if(a==="cont"){resume=false;render()}
+  else if(a==="cont"){resume=false;P=normP(P);sv("prog",P);render()}
   else if(a==="go")startGo();
   else if(a==="restart"){const rs=()=>{resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P);render()};if(P.ph==="end"&&!resume)closeCurtain(rs);else rs()}
   else if(a==="begin")go("door",{i:0,li:0,t:0,u:0});
@@ -684,6 +685,7 @@ function phaseFx(){const w=document.getElementById("wh");if(!w)return;
   else if(P.ph==="sky"){if(!window.skF){window.skF=1;document.body.classList.add("sk");setTimeout(()=>{try{onResize()}catch(e){}},0);w.style.transition="none";w.style.opacity=1;void w.offsetWidth;w.style.transition="opacity 2.2s ease-out";w.style.opacity=0;setTimeout(()=>{if(P.ph==="sky")skyEnd()},28000)}}
   else if(P.ph!=="wishing"&&P.ph!=="wish"){window.goF=0;window.skF=0;w.style.transition="none";w.style.opacity=0;document.body.classList.remove("sk","wishing")}}
 function skyEnd(){if(P.ph!=="sky")return;P.ph="wishing";document.body.classList.add("wishing");document.getElementById("lmn").classList.remove("on");closeCurtain(()=>{P.ph="wish";document.getElementById("wishk").textContent=S.lk||"AAA";document.getElementById("wishm").textContent=S.lw===undefined?"素敵な１年になりますように":S.lw;document.getElementById("wish").classList.add("on")},true)}
+(function(){const keep=()=>{try{sv("prog",P)}catch(e){}};addEventListener("pagehide",keep);document.addEventListener("visibilitychange",()=>{if(document.hidden)keep()});try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}})();
 document.getElementById("wishb").onclick=()=>{document.body.classList.remove("wishing","sk");document.getElementById("wish").classList.remove("on");window.goF=0;window.skF=0;resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P);try{onResize()}catch(e){}render()};
 function failRestart(){go("fail");setTimeout(()=>closeCurtain(()=>{resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P);render()}),1800)}
 function endDay(){go("bye");setTimeout(()=>closeCurtain(()=>{resume=false;P={i:0,ph:"start",li:0,t:0};sv("prog",P);render()}),2400)}
